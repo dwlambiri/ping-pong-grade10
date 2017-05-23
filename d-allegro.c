@@ -381,6 +381,7 @@ CheckPaletteCollision(struct PongData* p) {
 			p->ball.yposition  <= p->p1.ge.yposition + p->p1.ge.height){
 
 			p->ball.xspeed *= -1;
+			p->ball.xspeed -= rand() %2;
 			if(p->ball.xspeed >=0) p->ball.xspeed = -5;
 			return true;
 	}
@@ -390,6 +391,7 @@ CheckPaletteCollision(struct PongData* p) {
 			p->ball.yposition  <= p->p2.ge.yposition + p->p2.ge.height){
 
 		    p->ball.xspeed *= -1;
+		    p->ball.xspeed += rand() %2;
 		    if(p->ball.xspeed <=0) p->ball.xspeed = 5;
 			return true;
 	}
