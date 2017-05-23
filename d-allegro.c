@@ -101,7 +101,6 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	p->display.width  = screenwidth;
 	p->display.display = al_create_display(p->display.width, p->display.height);
 	p->timer = al_create_timer(refreshtime);
-	if(p->arcade == true) p->hal9000 = al_create_timer(1.0/COMPUTERSPEED);
 	p->eventqueue = al_create_event_queue();
 
 	al_register_event_source(p->eventqueue, al_get_keyboard_event_source());
@@ -109,8 +108,10 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	al_register_event_source(p->eventqueue, al_get_timer_event_source(p->timer));
 	if(p->arcade == true) {
 		printf("Arcade Mode Detected\n");
+		p->hal9000 = al_create_timer(1.0/COMPUTERSPEED);
 		al_register_event_source(p->eventqueue, al_get_timer_event_source(p->hal9000));
 	}
+	else p->hal9000 = NULL;
 
 	if(LoadBitmap(&(p->p1.ge), P1FNAME) == false) return false;
 	if(LoadBitmap(&(p->p2.ge), P2FNAME) == false) return false;
@@ -324,7 +325,7 @@ bool
 PrintRoundWinner(struct PongData* p) {
 
 	al_stop_timer(p->timer);
-	al_stop_timer(p->hal9000);
+	if(p->arcade) al_stop_timer(p->hal9000);
 	char textBuffer[255];
 	sprintf(textBuffer, "%s Wins!! Score: %s %d %s %d",p->roundWinner->name, p->p1.name, p->p1.score, p->p2.name, p->p2.score);
 	InitialPosition(p);
@@ -335,7 +336,7 @@ PrintRoundWinner(struct PongData* p) {
 	}
 	else {
 		al_start_timer(p->timer);
-		al_start_timer(p->hal9000);
+		if(p->arcade) al_start_timer(p->hal9000);
 	}
 
 	return true;
@@ -458,10 +459,13 @@ GameLoop(struct PongData* p) {
 				return false;
 			}
 		}
-		if(p->arcade == true) {
-			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
-			   p->ev.timer.source == p->hal9000) UpdatePlayer2(p);
+
+		if(p->arcade == true &&
+		   p->ev.type == ALLEGRO_EVENT_TIMER &&
+		   p->ev.timer.source == p->hal9000) {
+			UpdatePlayer2(p);
 		}
+
 		DrawObjects(p);
 		al_flip_display();
 		}
