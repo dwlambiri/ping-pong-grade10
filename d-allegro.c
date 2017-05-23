@@ -97,8 +97,9 @@ InitialPosition(struct PongData* p) {
  */
 bool
 InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtime,  int fontsize, int level, bool arcade) {
-
+	//seed random number generator with time
 	srand (time(NULL));
+	//initiallises allegro libraries
 	al_init();
 	al_init_primitives_addon();
 	al_init_image_addon();
@@ -106,9 +107,11 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	al_init_font_addon(); // initialize the font addon
 	al_init_ttf_addon();// initialize the ttf (True Type Font) addon
 
+	//tries to load font file
 	p->font = al_load_ttf_font("pirulen.ttf", fontsize,0 );
 
-	if (!p->font){
+	//error message if the font file is NULL
+	if (p->font == NULL){
 	      printf("Could not load 'pirulen.ttf'.\n");
 	      return false;
 	}
@@ -592,19 +595,29 @@ GameExit(struct PongData* p) {
 int
 main(int argc, char **argv) {
 
-
+	//declaring the main data variable of the game
 	struct PongData pong;
+	//declaring temporary variable for screen height
 	int screenheight = SCREEN_H;
+	//declares temporary variable for screen width
 	int screenwidth = SCREEN_W;
+	//declares a temporary variable for font size
 	int fontsize = FONTSIZE;
+	//declares a temporary variable for the maximum speed of the ball
 	int level = LEVEL;
 
+	//declares a temporary variable that allows iteration through the command line array
 	int param = 0;
+	//declares a temporary variable that determines whether the game shall played in 2 player (false) or vs ai mode (true)
 	bool arcade = false;
 
+	//sets the default player 1 and player 2 names
 	strcpy(pong.p1.name, "Player1");
 	strcpy(pong.p2.name, "Player2");
 
+	//loop that processes the command line arguments.
+	//argc is the size of the argument's array and argv is the array itself
+	//argv[0] contains the name of the program
 	while(++param < argc) {
 		if(strcmp(argv[param],"-a")==0) {
 			//arcade mode
@@ -646,6 +659,7 @@ main(int argc, char **argv) {
 			return 0;
 		}
 	}
+	//IF game is in arcade mode, player 2 is HAL9000
 	if(arcade ==true) {
 		strcpy(pong.p2.name, "HAL9000");
 	}
