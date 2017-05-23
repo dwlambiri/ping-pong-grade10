@@ -110,6 +110,8 @@ struct PongData {
 	ALLEGRO_TIMER *timer;
 	ALLEGRO_TIMER *hal9000;
 	ALLEGRO_FONT *font;
+	ALLEGRO_COLOR bcolor;
+	ALLEGRO_COLOR fcolor;
 };
 
 

@@ -21,9 +21,9 @@
   --------------------------------------------------------------------------
  */
 void
-SetBackgroundColor(void) {
+SetBackgroundColor(ALLEGRO_COLOR color) {
 	// set to yellow
-	al_clear_to_color(al_map_rgb(255, 255, 0));
+	al_clear_to_color(color);
 } // end-of-method SetBackgroundColor
 
 
@@ -117,6 +117,8 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	p->display.height = screenheight;
 	p->display.width  = screenwidth;
 	p->display.display = al_create_display(p->display.width, p->display.height);
+	p->bcolor = al_map_rgb(255, 255, 0);
+	p->fcolor = al_map_rgb(0, 0, 0);
 	p->timer = al_create_timer(refreshtime);
 	p->eventqueue = al_create_event_queue();
 
@@ -140,7 +142,7 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 
 	InitialPosition(p);
 
-	SetBackgroundColor();
+	SetBackgroundColor(p->bcolor);
 
 	return true;
 } // end-of-method InitGame
@@ -192,16 +194,15 @@ ProcessKeyPress(struct PongData* p) {
   ---------------------------------------------------------------------------
    @author  dwlambiri
    @date    May 22, 2017
-   @mname   DisplayText
+   @mname   DrawText
    @details
 	  \n
   --------------------------------------------------------------------------
  */
 void
 DrawText(struct PongData* p, char* text, int x ,int y) {
-
-    al_draw_text(p->font, al_map_rgb(0,0,0), x, y,ALLEGRO_ALIGN_CENTRE, text);
-} // end-of-method DisplayText
+    al_draw_text(p->font, p->fcolor, x, y,ALLEGRO_ALIGN_CENTRE, text);
+} // end-of-method DrawText
 
 
 /**
@@ -214,10 +215,8 @@ DrawText(struct PongData* p, char* text, int x ,int y) {
   --------------------------------------------------------------------------
  */
 void
-DisplayText(struct PongData* p, char* text) {
-
+DisplayTextQH(struct PongData* p, char* text) {
 	DrawText(p, text, p->display.width/2, p->display.height/4);
-	al_flip_display();
 } // end-of-method DisplayText
 
 /**
@@ -232,7 +231,8 @@ DisplayText(struct PongData* p, char* text) {
 bool
 DisplayTextAndWaitForKey(struct PongData* p,char* text) {
 
-	DisplayText(p, text);
+	DisplayTextQH(p, text);
+	al_flip_display();
 	al_wait_for_event(p->eventqueue, &(p->ev));
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
 		switch (p->ev.keyboard.keycode){
@@ -272,7 +272,7 @@ DrawBitmap(struct GameEntity* g) {
 void
 DrawObjects(struct PongData* p) {
 
-	SetBackgroundColor();
+	SetBackgroundColor(p->bcolor);
 	DrawBitmap(&(p->p1.ge));
 	DrawBitmap(&(p->p2.ge));
 	DrawBitmap(&(p->ball));
@@ -344,12 +344,13 @@ PrintRoundWinner(struct PongData* p) {
 
 	al_stop_timer(p->timer);
 	if(p->arcade) al_stop_timer(p->hal9000);
-	char textBuffer[255];
-	al_rest(1.0);
-	sprintf(textBuffer, "%s Wins!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
+
 	InitialPosition(p);
 	DrawObjects(p);
 	DrawText(p, "Press any key to start or ESC to exit", p->display.width/2, p->display.height/3);
+
+	char textBuffer[255];
+	sprintf(textBuffer, "%s Wins!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 	if(DisplayTextAndWaitForKey(p, textBuffer) == false) {
 		return false;
 	}
@@ -413,13 +414,31 @@ UpdateBallPosition(struct PongData* p) {
 	p->ball.xposition = p->ball.xposition + p->ball.xspeed;
 	p->ball.yposition = p->ball.yposition + p->ball.yspeed;
 
-
+	CheckPaletteCollision(p);
 	CheckTopBottomCollision(p);
 	if(CheckSideCollitions(p) == true) return true;
-	CheckPaletteCollision(p);
+
 
 	return false;
 } // end-of-method UpdateBallPosition
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 23, 2017
+   @mname   minSpeed
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+int
+minSpeed(int a, int b) {
+
+	if(a < b) return a;
+	else return b;
+} // end-of-method minSpeed
+
+
 
 /**
   ---------------------------------------------------------------------------
@@ -433,13 +452,15 @@ UpdateBallPosition(struct PongData* p) {
 void
 UpdatePlayer2(struct PongData* p) {
 
+	//update only when ball moves towards the player
+	if(p->ball.xspeed > 0) return;
 	if(p->ball.yspeed > 0) {
-		p->p2.ge.yposition += p->display.height/COMPUTERSPEED;
+		p->p2.ge.yposition += p->display.height/minSpeed(COMPUTERSPEED,p->ball.yspeed) ;
 		if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
 			p->p2.ge.yposition = (p->display.height - p->p2.ge.height);
 	}
 	else {
-		p->p2.ge.yposition -= p->display.height/COMPUTERSPEED;
+		p->p2.ge.yposition -= p->display.height/minSpeed(COMPUTERSPEED,-1*p->ball.yspeed);
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
 	}
 } // end-of-method UpdatePlayer2
@@ -463,33 +484,51 @@ GameLoop(struct PongData* p) {
 		al_start_timer(p->hal9000);
 	}
 
+	bool roundwin = false;
+	int skipCounter = 0;
+	int maxSkip = 45;
+
 	while (true){
 
 		al_wait_for_event(p->eventqueue, &(p->ev));
 
-		if(ProcessKeyPress(p) == false) {
-			//user has ended game
-			return false;
+		if(roundwin == true) {
+			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
+					   p->ev.timer.source == p->timer) {
+				//skip maxSkip frames
+				if(skipCounter++ >= maxSkip) {
+					skipCounter = 0;
+					roundwin = false;
+					if(PrintRoundWinner(p) == false ) {
+						//user has pressed ESC to end the game
+						return false;
+					}
+				}
+
+			}
+			else continue;
 		}
-		if(p->ev.type == ALLEGRO_EVENT_TIMER &&
-		   p->ev.timer.source == p->timer) {
-			if(UpdateBallPosition(p) == true) {
-				if(PrintRoundWinner(p) == false ) {
-					//user has pressed ESC to end the game
-					return false;
+		else {
+			if(ProcessKeyPress(p) == false) {
+				//user has ended game
+				return false;
+			}
+
+			if(p->arcade == true &&
+			   p->ev.type == ALLEGRO_EVENT_TIMER &&
+			   p->ev.timer.source == p->hal9000) {
+				UpdatePlayer2(p);
+			}
+			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
+			   p->ev.timer.source == p->timer) {
+				roundwin = UpdateBallPosition(p);
+				DrawObjects(p);
+				al_flip_display();
+				if(roundwin == true) {
 				}
 			}
 		}
-
-		if(p->arcade == true &&
-		   p->ev.type == ALLEGRO_EVENT_TIMER &&
-		   p->ev.timer.source == p->hal9000) {
-			UpdatePlayer2(p);
-		}
-
-		DrawObjects(p);
-		al_flip_display();
-		}
+	}
 
 	return true;
 } // end-of-method GameLoop
@@ -613,7 +652,7 @@ main(int argc, char **argv) {
 		//error initializing the game;
 		return 22;
 	}
-	SetBackgroundColor();
+	SetBackgroundColor(pong.bcolor);
 	if(DisplayTextAndWaitForKey(&pong,"Press Any Key To Begin or ESC to Terminate") == true) {
 		GameLoop(&pong);
 	}
