@@ -470,11 +470,13 @@ GameLoop(struct PongData* p) {
 			//user has ended game
 			return false;
 		}
-
-		if(UpdateBallPosition(p) == true) {
-			if(PrintRoundWinner(p) == false ) {
-				//user has pressed ESC to end the game
-				return false;
+		if(p->ev.type == ALLEGRO_EVENT_TIMER &&
+		   p->ev.timer.source == p->timer) {
+			if(UpdateBallPosition(p) == true) {
+				if(PrintRoundWinner(p) == false ) {
+					//user has pressed ESC to end the game
+					return false;
+				}
 			}
 		}
 
