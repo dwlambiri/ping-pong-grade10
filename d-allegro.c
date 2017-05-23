@@ -15,6 +15,23 @@
   ---------------------------------------------------------------------------
    @author  dwlambiri
    @date    May 22, 2017
+   @mname   SetBackgroundColor
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+void
+SetBackgroundColor(void) {
+	// set to yellow
+	al_clear_to_color(al_map_rgb(255, 255, 0));
+} // end-of-method SetBackgroundColor
+
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 22, 2017
    @mname   LoadBitmap
    @details
 	  return true if ok false otherwise\n
@@ -123,7 +140,7 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 
 	InitialPosition(p);
 
-	al_clear_to_color(al_map_rgb(255, 255, 0));
+	SetBackgroundColor();
 
 	return true;
 } // end-of-method InitGame
@@ -255,6 +272,7 @@ DrawBitmap(struct GameEntity* g) {
 void
 DrawObjects(struct PongData* p) {
 
+	SetBackgroundColor();
 	DrawBitmap(&(p->p1.ge));
 	DrawBitmap(&(p->p2.ge));
 	DrawBitmap(&(p->ball));
@@ -447,7 +465,6 @@ GameLoop(struct PongData* p) {
 	while (true){
 
 		al_wait_for_event(p->eventqueue, &(p->ev));
-		al_clear_to_color(al_map_rgb(255, 255, 0));
 
 		if(ProcessKeyPress(p) == false) {
 			//user has ended game
@@ -593,7 +610,7 @@ main(int argc, char **argv) {
 		//error initializing the game;
 		return 22;
 	}
-
+	SetBackgroundColor();
 	if(DisplayTextAndWaitForKey(&pong,"Press Any Key To Begin or ESC to Terminate") == true) {
 		GameLoop(&pong);
 	}
