@@ -345,6 +345,7 @@ PrintRoundWinner(struct PongData* p) {
 	al_stop_timer(p->timer);
 	if(p->arcade) al_stop_timer(p->hal9000);
 	char textBuffer[255];
+	al_rest(1.0);
 	sprintf(textBuffer, "%s Wins!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 	InitialPosition(p);
 	DrawObjects(p);
