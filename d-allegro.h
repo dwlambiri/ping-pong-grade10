@@ -32,6 +32,7 @@
 #define SOMENUMBER 11
 #define FONTSIZE 24
 #define LEVEL 10
+#define MAXNAME 200
 
 
 #define P1FNAME "player1.png"
@@ -70,9 +71,9 @@ struct GameEntity {
   ---------------------------------------------------------------------------
  */
 struct Player {
-	int score;
+	unsigned int score;
 	struct GameEntity ge;
-	char name[200];
+	char name[MAXNAME];
 	ALLEGRO_SAMPLE *sample;
 };
 
