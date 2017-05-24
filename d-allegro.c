@@ -1,9 +1,9 @@
 //============================================================================
 // Name        : d-allegro.c
-// Author      : 
+// Author      : dwlambiri
 // Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C, Ansi-style
+// Copyright   : (c) 2017 Darius William Lambiri
+// Description : pong game
 //============================================================================
 
 #include <stdio.h>
