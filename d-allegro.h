@@ -61,6 +61,9 @@ struct GameEntity {
 	ALLEGRO_BITMAP* bmap;
 	char* fname;
 };
+
+#define INITGE {0, 0, 0, 0, 0, 0, NULL, NULL }
+
 /**
   ---------------------------------------------------------------------------
    @author     dwlambiri
@@ -110,6 +113,7 @@ struct PongData {
 	bool   arcade;
 	int    level;
 	struct Player* roundWinner;
+	int    fontsize;
 
 	ALLEGRO_EVENT ev;
 	ALLEGRO_EVENT_QUEUE *eventqueue;

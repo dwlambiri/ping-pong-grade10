@@ -96,7 +96,7 @@ InitialPosition(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 bool
-InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtime,  int fontsize, int level, bool arcade) {
+InitGame(struct PongData* p, float refreshtime) {
 	//seed random number generator with time
 	srand (time(NULL));
 	//initiallises allegro libraries
@@ -111,7 +111,7 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	al_reserve_samples(2);
 
 	//tries to load font file
-	p->font = al_load_ttf_font("pirulen.ttf", fontsize,0 );
+	p->font = al_load_ttf_font("pirulen.ttf", p->fontsize,0 );
 
 	//error message if the font file is NULL
 	if (p->font == NULL){
@@ -119,9 +119,6 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	      return false;
 	}
 
-	p->arcade = arcade;
-	p->display.height = screenheight;
-	p->display.width  = screenwidth;
 	p->display.display = al_create_display(p->display.width, p->display.height);
 	p->bcolor = al_map_rgb(255, 255, 0);
 	p->fcolor = al_map_rgb(0, 0, 0);
@@ -151,10 +148,6 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	   printf( "Audio clip sample for player 2 not loaded!\n" );
 	   return false;
 	}
-	p->p1.score = 0;
-	p->p2.score = 0;
-	p->level    = level;
-	p->roundWinner = NULL;
 
 	InitialPosition(p);
 
@@ -609,6 +602,66 @@ GameExit(struct PongData* p) {
 	al_destroy_display(p->display.display);
 } // end-of-function GameExit
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 24, 2017
+   @mname   ProcessParams
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+bool
+ProcessParams(int argc, char **argv, struct PongData* p) {
+	int param = 0;
+	//loop that processes the command line arguments.
+	//argc is the size of the argument's array and argv is the array itself
+	//argv[0] contains the name of the program
+	for ( param = 1; param < argc; param++ ) {
+		if(strcmp(argv[param],"-a")==0) {
+			//arcade mode
+			//player 2 is the computer
+			p->arcade = true;
+		}
+		else if(strcmp(argv[param],"-x")==0) {
+			//display width
+			if(++param < argc)
+				p->display.width = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-y")==0) {
+			//display height
+			if(++param < argc)
+				p->display.height = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-s")==0) {
+			//font size
+			if(++param < argc)
+				p->fontsize = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-l")==0) {
+			//font size
+			if(++param < argc)
+				p->level = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-p1")==0) {
+			//font size
+			if(++param < argc)
+				strcpy(p->p1.name, argv[param]);
+		}
+		else if(strcmp(argv[param],"-p2")==0) {
+			//font size
+			if(++param < argc)
+				strcpy(p->p2.name, argv[param]);
+		}
+		else if(strcmp(argv[param],"-h")==0) {
+			Usage();
+			return false;
+		}
+	}//end-of-for
+
+	return true;
+} // end-of-function ProcessParams
+
 
 
 /**
@@ -628,75 +681,30 @@ int
 main(int argc, char **argv) {
 
 	//declaring the main data variable of the game
-	struct PongData pong;
-	//declaring temporary variable for screen height
-	int screenheight = SCREEN_H;
-	//declares temporary variable for screen width
-	int screenwidth = SCREEN_W;
-	//declares a temporary variable for font size
-	int fontsize = FONTSIZE;
-	//declares a temporary variable for the maximum speed of the ball
-	int level = LEVEL;
+	struct PongData pong = {
+			{0, INITGE, "", NULL},
+			{0, INITGE, "", NULL},
+			INITGE,
+			{SCREEN_W, SCREEN_H, NULL},
+			false,
+			20,
+			NULL,
+			24
+	};
 
-	//declares a temporary variable that allows iteration through the command line array
-	int param = 0;
-	//declares a temporary variable that determines whether the game shall played in 2 player (false) or vs ai mode (true)
-	bool arcade = false;
 
 	//sets the default player 1 and player 2 names
 	strcpy(pong.p1.name, "Player1");
 	strcpy(pong.p2.name, "Player2");
 
-	//loop that processes the command line arguments.
-	//argc is the size of the argument's array and argv is the array itself
-	//argv[0] contains the name of the program
-	for ( param = 1; param < argc; param++ ) {
-		if(strcmp(argv[param],"-a")==0) {
-			//arcade mode
-			//player 2 is the computer
-			arcade = true;
-		}
-		else if(strcmp(argv[param],"-x")==0) {
-			//display width
-			if(++param < argc)
-				screenwidth = atoi(argv[param]);
-		}
-		else if(strcmp(argv[param],"-y")==0) {
-			//display height
-			if(++param < argc)
-				screenheight = atoi(argv[param]);
-		}
-		else if(strcmp(argv[param],"-s")==0) {
-			//font size
-			if(++param < argc)
-				fontsize = atoi(argv[param]);
-		}
-		else if(strcmp(argv[param],"-l")==0) {
-			//font size
-			if(++param < argc)
-				level = atoi(argv[param]);
-		}
-		else if(strcmp(argv[param],"-p1")==0) {
-			//font size
-			if(++param < argc)
-				strcpy(pong.p1.name, argv[param]);
-		}
-		else if(strcmp(argv[param],"-p2")==0) {
-			//font size
-			if(++param < argc)
-				strcpy(pong.p2.name, argv[param]);
-		}
-		else if(strcmp(argv[param],"-h")==0) {
-			Usage();
-			return 0;
-		}
-	}
+	if(ProcessParams(argc, argv, &pong) == false) return 0;
+
 	//IF game is in arcade mode, player 2 is HAL9000
-	if(arcade ==true) {
+	if(pong.arcade ==true) {
 		strcpy(pong.p2.name, "HAL9000");
 	}
 
-	if(InitGame(&pong, screenheight, screenwidth, REFRESHTIME, fontsize, level, arcade) == false ) {
+	if(InitGame(&pong, REFRESHTIME) == false ) {
 		//error initializing the game;
 		return 22;
 	}
