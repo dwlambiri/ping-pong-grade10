@@ -24,7 +24,7 @@ void
 SetBackgroundColor(ALLEGRO_COLOR color) {
 	// set to yellow
 	al_clear_to_color(color);
-} // end-of-method SetBackgroundColor
+} // end-of-function SetBackgroundColor
 
 
 
@@ -48,7 +48,7 @@ LoadBitmap(struct GameEntity* g, char* fname) {
 	g->height = al_get_bitmap_height(g->bmap);
 
 	return true;
-} // end-of-method LoadBitmap
+} // end-of-function LoadBitmap
 
 /**
   ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ InitialPosition(struct PongData* p) {
 	p->ball.yposition = p->display.height/2 - (p->ball.height/2);
 
 
-} // end-of-method InitialPosition
+} // end-of-function InitialPosition
 
 
 
@@ -161,7 +161,7 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	SetBackgroundColor(p->bcolor);
 
 	return true;
-} // end-of-method InitGame
+} // end-of-function InitGame
 
 /**
   ---------------------------------------------------------------------------
@@ -204,7 +204,7 @@ ProcessKeyPress(struct PongData* p) {
 		}
 	}
 	return true;
-} // end-of-method ProcessKeyPress
+} // end-of-function ProcessKeyPress
 
 /**
   ---------------------------------------------------------------------------
@@ -218,7 +218,7 @@ ProcessKeyPress(struct PongData* p) {
 void
 DrawText(struct PongData* p, char* text, int x ,int y) {
     al_draw_text(p->font, p->fcolor, x, y,ALLEGRO_ALIGN_CENTRE, text);
-} // end-of-method DrawText
+} // end-of-function DrawText
 
 
 /**
@@ -233,7 +233,7 @@ DrawText(struct PongData* p, char* text, int x ,int y) {
 void
 DisplayTextQH(struct PongData* p, char* text) {
 	DrawText(p, text, p->display.width/2, p->display.height/4);
-} // end-of-method DisplayText
+} // end-of-function DisplayText
 
 /**
   ---------------------------------------------------------------------------
@@ -259,7 +259,7 @@ DisplayTextAndWaitForKey(struct PongData* p,char* text) {
 		}
 	}
 	return true;
-} // end-of-method DisplayTextAndWaitForKey
+} // end-of-function DisplayTextAndWaitForKey
 
 /**
   ---------------------------------------------------------------------------
@@ -274,7 +274,7 @@ void
 DrawBitmap(struct GameEntity* g) {
 	al_draw_bitmap(g->bmap, g->xposition, g->yposition, 0);
 
-} // end-of-method DrawBitmap
+} // end-of-function DrawBitmap
 
 /**
   ---------------------------------------------------------------------------
@@ -292,7 +292,7 @@ DrawObjects(struct PongData* p) {
 	DrawBitmap(&(p->p1.ge));
 	DrawBitmap(&(p->p2.ge));
 	DrawBitmap(&(p->ball));
-} // end-of-method DrawObjects
+} // end-of-function DrawObjects
 
 /**
   ---------------------------------------------------------------------------
@@ -318,7 +318,7 @@ CheckTopBottomCollision(struct PongData* p) {
 	}
 
 	return false;
-} // end-of-method CheckTopBottomCollision
+} // end-of-function CheckTopBottomCollision
 
 /**
   ---------------------------------------------------------------------------
@@ -344,7 +344,7 @@ CheckSideCollitions(struct PongData* p) {
 		return true;
 	}
 	return false;
-} // end-of-method CheckSideCollitions
+} // end-of-function CheckSideCollitions
 
 /**
   ---------------------------------------------------------------------------
@@ -376,7 +376,7 @@ PrintRoundWinner(struct PongData* p) {
 	}
 
 	return true;
-} // end-of-method PrintRoundWinner
+} // end-of-function PrintRoundWinner
 
 
 /**
@@ -391,7 +391,7 @@ PrintRoundWinner(struct PongData* p) {
 void
 PlaySound(ALLEGRO_SAMPLE* s) {
 	al_play_sample(s, 1.0, 0.0,1.0,ALLEGRO_PLAYMODE_ONCE,NULL);
-} // end-of-method PlaySound
+} // end-of-function PlaySound
 
 
 
@@ -430,7 +430,7 @@ CheckPaletteCollision(struct PongData* p) {
 	}
 
 	return false;
-} // end-of-method CheckPaletteCollision
+} // end-of-function CheckPaletteCollision
 
 
 
@@ -455,7 +455,7 @@ UpdateBallPosition(struct PongData* p) {
 
 
 	return false;
-} // end-of-method UpdateBallPosition
+} // end-of-function UpdateBallPosition
 
 /**
   ---------------------------------------------------------------------------
@@ -471,7 +471,7 @@ minSpeed(int a, int b) {
 
 	if(a < b) return a;
 	else return b;
-} // end-of-method minSpeed
+} // end-of-function minSpeed
 
 
 
@@ -500,7 +500,7 @@ UpdatePlayer2(struct PongData* p) {
 			p->p2.ge.yposition -= p->display.height/minSpeed(COMPUTERSPEED,-1*p->ball.yspeed);
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
 	}
-} // end-of-method UpdatePlayer2
+} // end-of-function UpdatePlayer2
 
 
 
@@ -568,7 +568,7 @@ GameLoop(struct PongData* p) {
 	}
 
 	return true;
-} // end-of-method GameLoop
+} // end-of-function GameLoop
 
 /**
   ---------------------------------------------------------------------------
@@ -590,7 +590,7 @@ Usage(void) {
 	printf("   -l number - set level value. default is 10. higher is faster\n");
 	printf("   -p1 name - player1 name\n");
 	printf("   -p2 name - player2 name\n");
-} // end-of-method Usage
+} // end-of-function Usage
 
 
 /**
@@ -607,7 +607,7 @@ GameExit(struct PongData* p) {
 
 	al_rest(0.0);
 	al_destroy_display(p->display.display);
-} // end-of-method GameExit
+} // end-of-function GameExit
 
 
 
@@ -708,4 +708,4 @@ main(int argc, char **argv) {
 
 	GameExit(&pong);
 	return 0;
-}
+} // end-of-function main
