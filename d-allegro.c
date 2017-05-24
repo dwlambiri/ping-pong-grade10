@@ -650,7 +650,7 @@ main(int argc, char **argv) {
 	//loop that processes the command line arguments.
 	//argc is the size of the argument's array and argv is the array itself
 	//argv[0] contains the name of the program
-	while(++param < argc) {
+	for ( param = 1; param < argc; param++ ) {
 		if(strcmp(argv[param],"-a")==0) {
 			//arcade mode
 			//player 2 is the computer
