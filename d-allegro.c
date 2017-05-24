@@ -106,6 +106,9 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	al_install_keyboard();
 	al_init_font_addon(); // initialize the font addon
 	al_init_ttf_addon();// initialize the ttf (True Type Font) addon
+	al_install_audio();
+	al_init_acodec_addon();
+	al_reserve_samples(2);
 
 	//tries to load font file
 	p->font = al_load_ttf_font("pirulen.ttf", fontsize,0 );
@@ -138,6 +141,16 @@ InitGame(struct PongData* p, int screenheight, int screenwidth, float refreshtim
 	if(LoadBitmap(&(p->p1.ge), P1FNAME) == false) return false;
 	if(LoadBitmap(&(p->p2.ge), P2FNAME) == false) return false;
 	if(LoadBitmap(&(p->ball), BALLFNAME) == false) return false;
+	p->p1.sample = al_load_sample( P1SOUND );
+	if (p->p1.sample == NULL) {
+	   printf( "Audio clip sample for player 1 not loaded!\n" );
+	   return false;
+	}
+	p->p2.sample = al_load_sample( P2SOUND );
+	if (p->p2.sample == NULL) {
+	   printf( "Audio clip sample for player 2 not loaded!\n" );
+	   return false;
+	}
 	p->p1.score = 0;
 	p->p2.score = 0;
 	p->level    = level;
@@ -366,6 +379,21 @@ PrintRoundWinner(struct PongData* p) {
 } // end-of-method PrintRoundWinner
 
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 23, 2017
+   @mname   PlaySound
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+void
+PlaySound(ALLEGRO_SAMPLE* s) {
+	al_play_sample(s, 1.0, 0.0,1.0,ALLEGRO_PLAYMODE_ONCE,NULL);
+} // end-of-method PlaySound
+
+
 
 /**
   ---------------------------------------------------------------------------
@@ -386,6 +414,7 @@ CheckPaletteCollision(struct PongData* p) {
 			p->ball.xspeed *= -1;
 			p->ball.xspeed -= rand() %2;
 			if(p->ball.xspeed >=0) p->ball.xspeed = -5;
+			PlaySound(p->p1.sample);
 			return true;
 	}
 
@@ -396,6 +425,7 @@ CheckPaletteCollision(struct PongData* p) {
 		    p->ball.xspeed *= -1;
 		    p->ball.xspeed += rand() %2;
 		    if(p->ball.xspeed <=0) p->ball.xspeed = 5;
+		    PlaySound(p->p2.sample);
 			return true;
 	}
 
@@ -460,12 +490,14 @@ UpdatePlayer2(struct PongData* p) {
 	//update only when ball moves towards the player
 	if(p->ball.xspeed > 0) return;
 	if(p->ball.yspeed > 0) {
-		p->p2.ge.yposition += p->display.height/minSpeed(COMPUTERSPEED,p->ball.yspeed) ;
+		if(p->ball.yposition > p->p2.ge.yposition )
+			p->p2.ge.yposition += p->display.height/minSpeed(COMPUTERSPEED,p->ball.yspeed) ;
 		if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
 			p->p2.ge.yposition = (p->display.height - p->p2.ge.height);
 	}
 	else {
-		p->p2.ge.yposition -= p->display.height/minSpeed(COMPUTERSPEED,-1*p->ball.yspeed);
+		if(p->ball.yposition < p->p2.ge.yposition )
+			p->p2.ge.yposition -= p->display.height/minSpeed(COMPUTERSPEED,-1*p->ball.yspeed);
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
 	}
 } // end-of-method UpdatePlayer2

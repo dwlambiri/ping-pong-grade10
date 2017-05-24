@@ -3,7 +3,8 @@ CC = gcc
 
 OBJS =		d-allegro.o
 
-LIBS = -L/usr/local/lib -lallegro -lallegro_main -lallegro_image -lallegro_primitives -lallegro_font -lallegro_ttf
+LIBS = -L/usr/local/lib -lallegro -lallegro_main -lallegro_image -lallegro_primitives -lallegro_font -lallegro_ttf -lallegro_audio -lallegro_acodec
+
 
 TARGET =	d-allegro
 

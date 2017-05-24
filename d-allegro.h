@@ -19,6 +19,8 @@
 #include <allegro5/color.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 
 #define SCREEN_W 1600
 #define SCREEN_H 1200
@@ -35,6 +37,8 @@
 #define P1FNAME "player1.png"
 #define P2FNAME "player2.png"
 #define BALLFNAME "ball.png"
+#define P1SOUND  "p1sound.ogg"
+#define P2SOUND  "p2sound.ogg"
 
 
 /**
@@ -69,6 +73,7 @@ struct Player {
 	int score;
 	struct GameEntity ge;
 	char name[200];
+	ALLEGRO_SAMPLE *sample;
 };
 
 
