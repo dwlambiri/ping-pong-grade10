@@ -126,5 +126,7 @@ struct PongData {
 	ALLEGRO_COLOR fcolor;
 };
 
+bool InitGame(struct PongData* p, float refreshtime);
+void GameRun(struct PongData* p);
 
 #endif /* D_ALLEGRO_H_ */
