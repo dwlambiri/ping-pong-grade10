@@ -135,9 +135,9 @@ InitGame(struct PongData* p, float refreshtime) {
 	}
 	else p->hal9000 = NULL;
 
-	if(LoadBitmap(&(p->p1.ge), P1FNAME) == false) return false;
-	if(LoadBitmap(&(p->p2.ge), P2FNAME) == false) return false;
-	if(LoadBitmap(&(p->ball), BALLFNAME) == false) return false;
+	if(LoadBitmap(&(p->p1.ge), (char*)P1FNAME) == false) return false;
+	if(LoadBitmap(&(p->p2.ge), (char*)P2FNAME) == false) return false;
+	if(LoadBitmap(&(p->ball), (char*)BALLFNAME) == false) return false;
 	p->p1.sample = al_load_sample( P1SOUND );
 	if (p->p1.sample == NULL) {
 	   printf( "Audio clip sample for player 1 not loaded!\n" );
@@ -359,13 +359,13 @@ PrintRoundWinner(struct PongData* p) {
 
 	char textBuffer[255];
 	if(p->roundWinner->score == p->maxscore) {
-		DrawText(p, "Press any key to start a new game or ESC to exit", p->display.width/2, p->display.height/3);
+		DrawText(p, (char*)"Press any key to start a new game or ESC to exit", p->display.width/2, p->display.height/3);
 		sprintf(textBuffer, "%s Wins The Game!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 		p->p2.score = 0;
 		p->p1.score = 0;
 	}
 	else {
-		DrawText(p, "Press any key to start or ESC to exit", p->display.width/2, p->display.height/3);
+		DrawText(p, (char*)"Press any key to start or ESC to exit", p->display.width/2, p->display.height/3);
 		sprintf(textBuffer, "%s Wins The Round!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 	}
 	if(DisplayTextAndWaitForKey(p, textBuffer) == false) {
@@ -718,7 +718,7 @@ main(int argc, char **argv) {
 		return 22;
 	}
 	SetBackgroundColor(pong.bcolor);
-	if(DisplayTextAndWaitForKey(&pong,"Press Any Key To Begin or ESC to Terminate") == true) {
+	if(DisplayTextAndWaitForKey(&pong,(char*)"Press Any Key To Begin or ESC to Terminate") == true) {
 		GameLoop(&pong);
 	}
 

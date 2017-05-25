@@ -1,5 +1,5 @@
 CCFLAGS =	-O2 -g -Wall -I/usr/local/include -fmessage-length=0
-CC = gcc
+CC = g++
 
 OBJS =		d-allegro.o
 
@@ -8,8 +8,8 @@ LIBS = -L/usr/local/lib -lallegro -lallegro_main -lallegro_image -lallegro_primi
 
 TARGET =	d-allegro
 
-$(OBJS) : d-allegro.c
-	$(CC) -c $(CFLAGS) -o d-allegro.o d-allegro.c
+$(OBJS) : d-allegro.cpp
+	$(CC) -c $(CFLAGS) -o d-allegro.o d-allegro.cpp
 
 $(TARGET):	$(OBJS)
 	$(CC) -o $(TARGET) $(OBJS) $(LIBS)
