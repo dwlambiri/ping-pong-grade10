@@ -33,6 +33,7 @@
 #define FONTSIZE 24
 #define LEVEL 10
 #define MAXNAME 200
+#define MAXSCORE 10
 
 
 #define P1FNAME "player1.png"
@@ -114,6 +115,7 @@ struct PongData {
 	int    level;
 	struct Player* roundWinner;
 	int    fontsize;
+	unsigned int maxscore;
 
 	ALLEGRO_EVENT ev;
 	ALLEGRO_EVENT_QUEUE *eventqueue;

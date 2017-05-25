@@ -356,10 +356,18 @@ PrintRoundWinner(struct PongData* p) {
 
 	InitialPosition(p);
 	DrawObjects(p);
-	DrawText(p, "Press any key to start or ESC to exit", p->display.width/2, p->display.height/3);
 
 	char textBuffer[255];
-	sprintf(textBuffer, "%s Wins!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
+	if(p->roundWinner->score == p->maxscore) {
+		DrawText(p, "Press any key to start a new game or ESC to exit", p->display.width/2, p->display.height/3);
+		sprintf(textBuffer, "%s Wins The Game!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
+		p->p2.score = 0;
+		p->p1.score = 0;
+	}
+	else {
+		DrawText(p, "Press any key to start or ESC to exit", p->display.width/2, p->display.height/3);
+		sprintf(textBuffer, "%s Wins The Round!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
+	}
 	if(DisplayTextAndWaitForKey(p, textBuffer) == false) {
 		return false;
 	}
@@ -581,6 +589,7 @@ Usage(void) {
 	printf("   -y number - sets the display height. default is 1200\n");
 	printf("   -s number - set font size. default is 24\n");
 	printf("   -l number - set level value. default is 10. higher is faster\n");
+	printf("   -m number - set max score value. default is 10.\n");
 	printf("   -p1 name - player1 name\n");
 	printf("   -p2 name - player2 name\n");
 } // end-of-function Usage
@@ -639,19 +648,24 @@ ProcessParams(int argc, char **argv, struct PongData* p) {
 				p->fontsize = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"-l")==0) {
-			//font size
+			//level
 			if(++param < argc)
 				p->level = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"-p1")==0) {
-			//font size
+			//player1 name
 			if(++param < argc)
 				strcpy(p->p1.name, argv[param]);
 		}
 		else if(strcmp(argv[param],"-p2")==0) {
-			//font size
+			//player2 name
 			if(++param < argc)
 				strcpy(p->p2.name, argv[param]);
+		}
+		else if(strcmp(argv[param],"-m")==0) {
+					//display width
+					if(++param < argc)
+						p->maxscore = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"-h")==0) {
 			Usage();
@@ -689,7 +703,8 @@ main(int argc, char **argv) {
 			false,
 			20,
 			NULL,
-			24
+			24,
+			MAXSCORE
 	};
 
 
