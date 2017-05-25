@@ -592,6 +592,7 @@ Usage(void) {
 	printf("   -m number - set max score value. default is 10.\n");
 	printf("   -p1 name - player1 name\n");
 	printf("   -p2 name - player2 name\n");
+
 } // end-of-function Usage
 
 
