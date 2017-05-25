@@ -480,13 +480,13 @@ minSpeed(int a, int b) {
   ---------------------------------------------------------------------------
    @author  dwlambiri
    @date    May 22, 2017
-   @mname   UpdatePlayer2
+   @mname   HAL9000AI
    @details
 	  \n
   --------------------------------------------------------------------------
  */
 void
-UpdatePlayer2(struct PongData* p) {
+HAL9000AI(struct PongData* p) {
 
 	//update only when ball moves towards the player
 	if(p->ball.xspeed > 0) return;
@@ -501,7 +501,7 @@ UpdatePlayer2(struct PongData* p) {
 			p->p2.ge.yposition -= p->display.height/minSpeed(COMPUTERSPEED,-1*p->ball.yspeed);
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
 	}
-} // end-of-function UpdatePlayer2
+} // end-of-function HAL9000AI
 
 
 
@@ -555,7 +555,7 @@ GameLoop(struct PongData* p) {
 			if(p->arcade == true &&
 			   p->ev.type == ALLEGRO_EVENT_TIMER &&
 			   p->ev.timer.source == p->hal9000) {
-				UpdatePlayer2(p);
+				HAL9000AI(p);
 			}
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 			   p->ev.timer.source == p->timer) {
@@ -634,38 +634,31 @@ ProcessParams(int argc, char **argv, struct PongData* p) {
 		}
 		else if(strcmp(argv[param],"-x")==0) {
 			//display width
-			if(++param < argc)
-				p->display.width = atoi(argv[param]);
+			if(++param < argc) p->display.width = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"-y")==0) {
 			//display height
-			if(++param < argc)
-				p->display.height = atoi(argv[param]);
+			if(++param < argc) p->display.height = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"-s")==0) {
 			//font size
-			if(++param < argc)
-				p->fontsize = atoi(argv[param]);
+			if(++param < argc) p->fontsize = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"-l")==0) {
 			//level
-			if(++param < argc)
-				p->level = atoi(argv[param]);
+			if(++param < argc) p->level = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"-p1")==0) {
 			//player1 name
-			if(++param < argc)
-				strcpy(p->p1.name, argv[param]);
+			if(++param < argc) strcpy(p->p1.name, argv[param]);
 		}
 		else if(strcmp(argv[param],"-p2")==0) {
 			//player2 name
-			if(++param < argc)
-				strcpy(p->p2.name, argv[param]);
+			if(++param < argc) strcpy(p->p2.name, argv[param]);
 		}
 		else if(strcmp(argv[param],"-m")==0) {
-					//display width
-					if(++param < argc)
-						p->maxscore = atoi(argv[param]);
+			//maxscore
+			if(++param < argc) p->maxscore = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"-h")==0) {
 			Usage();
