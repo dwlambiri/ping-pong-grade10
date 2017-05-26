@@ -22,26 +22,7 @@
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
 
-#define SCREEN_W 1600
-#define SCREEN_H 1200
-#define PLAYEROFFSET 100
-#define FRAMERATE 60.0
-#define REFRESHTIME 1.0/FRAMERATE
-#define PLAYERSPEED 10.0
-#define COMPUTERSPEED 10.0
-#define SOMENUMBER 11
-#define FONTSIZE 24
-#define LEVEL 10
 #define MAXNAME 200
-#define MAXSCORE 10
-
-
-#define P1FNAME "player1.png"
-#define P2FNAME "player2.png"
-#define BALLFNAME "ball.png"
-#define P1SOUND  "p1sound.ogg"
-#define P2SOUND  "p2sound.ogg"
-
 
 /**
   ---------------------------------------------------------------------------
@@ -126,7 +107,8 @@ struct PongData {
 	ALLEGRO_COLOR fcolor;
 };
 
-bool InitGame(struct PongData* p, float refreshtime);
-void GameRun(struct PongData* p);
+bool InitGame();
+void GameRun();
+struct PongData* CreateGameData();
 
 #endif /* D_ALLEGRO_H_ */

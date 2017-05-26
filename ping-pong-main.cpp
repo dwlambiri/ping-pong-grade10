@@ -19,7 +19,7 @@
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 Usage(void) {
 
 	printf("Program Options\n");
@@ -110,37 +110,14 @@ ProcessParams(int argc, char **argv, struct PongData* p) {
 int
 main(int argc, char **argv) {
 
-	//declaring the main data variable of the game
-	struct PongData pong = {
-			{0, INITGE, "", NULL},
-			{0, INITGE, "", NULL},
-			INITGE,
-			{SCREEN_W, SCREEN_H, NULL},
-			false,
-			20,
-			NULL,
-			24,
-			MAXSCORE
-	};
+	if(ProcessParams(argc, argv, CreateGameData()) == false) return 0;
 
-
-	//sets the default player 1 and player 2 names
-	strcpy(pong.p1.name, "Player1");
-	strcpy(pong.p2.name, "Player2");
-
-	if(ProcessParams(argc, argv, &pong) == false) return 0;
-
-	//IF game is in arcade mode, player 2 is HAL9000
-	if(pong.arcade ==true) {
-		strcpy(pong.p2.name, "HAL9000");
-	}
-
-	if(InitGame(&pong, REFRESHTIME) == false ) {
+	if(InitGame() == false ) {
 		//error initializing the game;
 		return 22;
 	}
 
-	GameRun(&pong);
+	GameRun();
 
 	return 0;
 } // end-of-function main

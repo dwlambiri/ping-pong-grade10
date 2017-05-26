@@ -11,7 +11,43 @@
 #include <stdlib.h>
 #include "d-allegro.h"
 
+static const int SCREEN_W = 1600;
+static const int SCREEN_H = 1200;
+//static const int PLAYEROFFSET = 100;
+static const float FRAMERATE = 60.0;
+static const float REFRESHTIME = 1.0/FRAMERATE;
+static const float PLAYERSPEED = 10.0;
+static const float COMPUTERSPEED = 10.0;
+//static const int SOMENUMBER = 11;
+static const int FONTSIZE = 24;
+static const int LEVEL = 20;
+static const int MAXSCORE = 10;
 
+
+static const char P1FNAME[]  =  "player1.png";
+static const char P2FNAME[] =   "player2.png";
+static const char BALLFNAME[] = "ball.png";
+static const char P1SOUND[] =   "p1sound.ogg";
+static const char P2SOUND[] =   "p2sound.ogg";
+
+
+static const char halname[] = "HAL9000";
+
+//declaring the main data variable of the game
+static struct PongData pong = {
+		{0, INITGE, "", NULL},
+		{0, INITGE, "", NULL},
+		INITGE,
+		{SCREEN_W, SCREEN_H, NULL},
+		false,
+		LEVEL,
+		NULL,
+		FONTSIZE,
+		MAXSCORE
+};
+
+
+//======= PRIVATE FUNCTIONS =========
 /**
   ---------------------------------------------------------------------------
    @author  dwlambiri
@@ -87,75 +123,6 @@ InitialPosition(struct PongData* p) {
 
 
 
-/**
-  ---------------------------------------------------------------------------
-   @author  dwlambiri
-   @date    May 22, 2017
-   @mname   InitGame
-   @details
-	  returns 1 if init ok, 0 otherwise\n
-  --------------------------------------------------------------------------
- */
-bool
-InitGame(struct PongData* p, float refreshtime) {
-	//seed random number generator with time
-	srand (time(NULL));
-	//initiallises allegro libraries
-	al_init();
-	al_init_primitives_addon();
-	al_init_image_addon();
-	al_install_keyboard();
-	al_init_font_addon(); // initialize the font addon
-	al_init_ttf_addon();// initialize the ttf (True Type Font) addon
-	al_install_audio();
-	al_init_acodec_addon();
-	al_reserve_samples(2);
-
-	//tries to load font file
-	p->font = al_load_ttf_font("pirulen.ttf", p->fontsize,0 );
-
-	//error message if the font file is NULL
-	if (p->font == NULL){
-	      printf("Could not load 'pirulen.ttf'.\n");
-	      return false;
-	}
-
-	p->display.display = al_create_display(p->display.width, p->display.height);
-	p->bcolor = al_map_rgb(255, 255, 0);
-	p->fcolor = al_map_rgb(0, 0, 0);
-	p->timer = al_create_timer(refreshtime);
-	p->eventqueue = al_create_event_queue();
-
-	al_register_event_source(p->eventqueue, al_get_keyboard_event_source());
-	al_register_event_source(p->eventqueue, al_get_display_event_source(p->display.display));
-	al_register_event_source(p->eventqueue, al_get_timer_event_source(p->timer));
-	if(p->arcade == true) {
-		printf("Arcade Mode Detected\n");
-		p->hal9000 = al_create_timer(1.0/COMPUTERSPEED);
-		al_register_event_source(p->eventqueue, al_get_timer_event_source(p->hal9000));
-	}
-	else p->hal9000 = NULL;
-
-	if(LoadBitmap(&(p->p1.ge), (char*)P1FNAME) == false) return false;
-	if(LoadBitmap(&(p->p2.ge), (char*)P2FNAME) == false) return false;
-	if(LoadBitmap(&(p->ball), (char*)BALLFNAME) == false) return false;
-	p->p1.sample = al_load_sample( P1SOUND );
-	if (p->p1.sample == NULL) {
-	   printf( "Audio clip sample for player 1 not loaded!\n" );
-	   return false;
-	}
-	p->p2.sample = al_load_sample( P2SOUND );
-	if (p->p2.sample == NULL) {
-	   printf( "Audio clip sample for player 2 not loaded!\n" );
-	   return false;
-	}
-
-	InitialPosition(p);
-
-	SetBackgroundColor(p->bcolor);
-
-	return true;
-} // end-of-function InitGame
 
 /**
   ---------------------------------------------------------------------------
@@ -573,7 +540,6 @@ GameLoop(struct PongData* p) {
 } // end-of-function GameLoop
 
 
-
 /**
   ---------------------------------------------------------------------------
    @author  dwlambiri
@@ -583,13 +549,110 @@ GameLoop(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 GameExit(struct PongData* p) {
 
 	al_rest(0.0);
 	al_destroy_display(p->display.display);
 } // end-of-function GameExit
 
+
+
+//======== PUBLIC FUNCITONS ===========
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 25, 2017
+   @mname   CreateGameData
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+struct PongData*
+CreateGameData() {
+	//sets the default player 1 and player 2 names
+	strcpy(pong.p1.name, "Player1");
+	strcpy(pong.p2.name, "Player2");
+	return &pong;
+} // end-of-function CreateGameData
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 22, 2017
+   @mname   InitGame
+   @details
+	  returns 1 if init ok, 0 otherwise\n
+  --------------------------------------------------------------------------
+ */
+bool
+InitGame() {
+	struct PongData* p = &pong;
+	//seed random number generator with time
+	srand (time(NULL));
+	//initiallises allegro libraries
+	al_init();
+	al_init_primitives_addon();
+	al_init_image_addon();
+	al_install_keyboard();
+	al_init_font_addon(); // initialize the font addon
+	al_init_ttf_addon();// initialize the ttf (True Type Font) addon
+	al_install_audio();
+	al_init_acodec_addon();
+	al_reserve_samples(2);
+
+	//tries to load font file
+	p->font = al_load_ttf_font("pirulen.ttf", p->fontsize,0 );
+
+	//error message if the font file is NULL
+	if (p->font == NULL){
+	      printf("Could not load 'pirulen.ttf'.\n");
+	      return false;
+	}
+
+	//IF game is in arcade mode, player 2 is HAL9000
+	if(p->arcade ==true) {
+		strcpy(p->p2.name, halname);
+	}
+
+	p->display.display = al_create_display(p->display.width, p->display.height);
+	p->bcolor = al_map_rgb(255, 255, 0);
+	p->fcolor = al_map_rgb(0, 0, 0);
+	p->timer = al_create_timer(REFRESHTIME);
+	p->eventqueue = al_create_event_queue();
+
+	al_register_event_source(p->eventqueue, al_get_keyboard_event_source());
+	al_register_event_source(p->eventqueue, al_get_display_event_source(p->display.display));
+	al_register_event_source(p->eventqueue, al_get_timer_event_source(p->timer));
+	if(p->arcade == true) {
+		printf("Arcade Mode Detected\n");
+		p->hal9000 = al_create_timer(1.0/COMPUTERSPEED);
+		al_register_event_source(p->eventqueue, al_get_timer_event_source(p->hal9000));
+	}
+	else p->hal9000 = NULL;
+
+	if(LoadBitmap(&(p->p1.ge), (char*)P1FNAME) == false) return false;
+	if(LoadBitmap(&(p->p2.ge), (char*)P2FNAME) == false) return false;
+	if(LoadBitmap(&(p->ball), (char*)BALLFNAME) == false) return false;
+	p->p1.sample = al_load_sample( P1SOUND );
+	if (p->p1.sample == NULL) {
+	   printf( "Audio clip sample for player 1 not loaded!\n" );
+	   return false;
+	}
+	p->p2.sample = al_load_sample( P2SOUND );
+	if (p->p2.sample == NULL) {
+	   printf( "Audio clip sample for player 2 not loaded!\n" );
+	   return false;
+	}
+
+	InitialPosition(p);
+
+	SetBackgroundColor(p->bcolor);
+
+	return true;
+} // end-of-function InitGame
 
 /**
   ---------------------------------------------------------------------------
@@ -601,8 +664,9 @@ GameExit(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 void
-GameRun(struct PongData* p) {
+GameRun() {
 
+	struct PongData* p = &pong;
 	SetBackgroundColor(p->bcolor);
 	if(DisplayTextAndWaitForKey(p,(char*)"Press Any Key To Begin or ESC to Terminate") == true) {
 		GameLoop(p);
@@ -610,5 +674,3 @@ GameRun(struct PongData* p) {
 
 	GameExit(p);
 } // end-of-function GameRun
-
-
