@@ -498,6 +498,9 @@ GameLoop(struct PongData* p) {
 
 		al_wait_for_event(p->eventqueue, &(p->ev));
 
+//		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+//					return false;
+//		}
 		if(roundwin == true) {
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 					   p->ev.timer.source == p->timer) {
@@ -554,6 +557,13 @@ GameExit(struct PongData* p) {
 
 	al_rest(0.0);
 	al_destroy_display(p->display.display);
+	al_destroy_timer(p->hal9000);
+	al_destroy_timer(p->timer);
+	al_destroy_event_queue(p->eventqueue);
+	al_destroy_font(p->font);
+	al_destroy_bitmap(p->p1.ge.bmap);
+	al_destroy_bitmap(p->p2.ge.bmap);
+	al_destroy_bitmap(p->ball.bmap);
 } // end-of-function GameExit
 
 
@@ -597,6 +607,7 @@ InitGame() {
 	al_init_primitives_addon();
 	al_init_image_addon();
 	al_install_keyboard();
+	al_install_mouse();
 	al_init_font_addon(); // initialize the font addon
 	al_init_ttf_addon();// initialize the ttf (True Type Font) addon
 	al_install_audio();
