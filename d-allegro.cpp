@@ -29,6 +29,7 @@ static const char P2FNAME[] =   "player2.png";
 static const char BALLFNAME[] = "ball.png";
 static const char P1SOUND[] =   "p1sound.ogg";
 static const char P2SOUND[] =   "p2sound.ogg";
+static const char FONTNAME[] =  "pirulen.ttf";
 
 
 static const char halname[] = "HAL9000";
@@ -615,11 +616,11 @@ InitGame() {
 	al_reserve_samples(2);
 
 	//tries to load font file
-	p->font = al_load_ttf_font("pirulen.ttf", p->fontsize,0 );
+	p->font = al_load_ttf_font(FONTNAME, p->fontsize,0 );
 
 	//error message if the font file is NULL
 	if (p->font == NULL){
-	      printf("Could not load 'pirulen.ttf'.\n");
+	      printf("Could not load %s.\n", FONTNAME);
 	      return false;
 	}
 
