@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include "d-allegro.h"
 
+static const int MAXNAME = 200;
 static const int SCREEN_W = 1600;
 static const int SCREEN_H = 1200;
 //static const int PLAYEROFFSET = 100;
@@ -33,6 +34,91 @@ static const char FONTNAME[] =  "pirulen.ttf";
 
 
 static const char halname[] = "HAL9000";
+
+/**
+  ---------------------------------------------------------------------------
+   @author     dwlambiri
+   @date       May 22, 2017
+   @name       GameEntity
+   @details
+	\n
+  ---------------------------------------------------------------------------
+ */
+struct GameEntity {
+	int xposition;
+	int yposition;
+	int xspeed;
+	int yspeed;
+	int width;
+	int height;
+	ALLEGRO_BITMAP* bmap;
+	char* fname;
+};
+
+#define INITGE {0, 0, 0, 0, 0, 0, NULL, NULL }
+
+/**
+  ---------------------------------------------------------------------------
+   @author     dwlambiri
+   @date       May 22, 2017
+   @name       Player
+   @details
+	\n
+  ---------------------------------------------------------------------------
+ */
+struct Player {
+	unsigned int score;
+	struct GameEntity ge;
+	char name[MAXNAME];
+	ALLEGRO_SAMPLE *sample;
+};
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author     dwlambiri
+   @date       May 22, 2017
+   @name       Display
+   @details
+	\n
+  ---------------------------------------------------------------------------
+ */
+struct Display {
+	int width;
+	int height;
+	ALLEGRO_DISPLAY *display;
+};
+
+/**
+  ---------------------------------------------------------------------------
+   @author     dwlambiri
+   @date       May 22, 2017
+   @name       PongData
+   @details
+	\n
+  ---------------------------------------------------------------------------
+ */
+struct PongData {
+	struct Player p1;
+	struct Player p2;
+	struct GameEntity   ball;
+	struct Display display;
+	bool   arcade;
+	int    level;
+	struct Player* roundWinner;
+	int    fontsize;
+	unsigned int maxscore;
+
+	ALLEGRO_EVENT ev;
+	ALLEGRO_EVENT_QUEUE *eventqueue;
+	ALLEGRO_TIMER *timer;
+	ALLEGRO_TIMER *hal9000;
+	ALLEGRO_FONT *font;
+	ALLEGRO_COLOR bcolor;
+	ALLEGRO_COLOR fcolor;
+};
+
+//======== Game Data ===========
 
 //declaring the main data variable of the game
 static struct PongData pong = {
@@ -567,9 +653,34 @@ GameExit(struct PongData* p) {
 	al_destroy_bitmap(p->ball.bmap);
 } // end-of-function GameExit
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 22, 2017
+   @mname   Usage
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static void
+Usage(void) {
+
+	printf("Program Options\n");
+	printf("   -a starts the program in arcade mode. by default the game is two player mode	\n");
+	printf("   -x number - sets the display  width. default is 1600\n");
+	printf("   -y number - sets the display height. default is 1200\n");
+	printf("   -s number - set font size. default is 24\n");
+	printf("   -l number - set level value. default is 10. higher is faster\n");
+	printf("   -m number - set max score value. default is 10.\n");
+	printf("   -p1 name - player1 name\n");
+	printf("   -p2 name - player2 name\n");
+
+} // end-of-function Usage
 
 
 //======== PUBLIC FUNCITONS ===========
+
+
 
 /**
   ---------------------------------------------------------------------------
@@ -580,12 +691,59 @@ GameExit(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-struct PongData*
-CreateGameData() {
+bool
+CreateGameData(int argc, char **argv) {
 	//sets the default player 1 and player 2 names
 	strcpy(pong.p1.name, "Player1");
 	strcpy(pong.p2.name, "Player2");
-	return &pong;
+	struct PongData* p = &pong;
+	int param = 0;
+	//loop that processes the command line arguments.
+	//argc is the size of the argument's array and argv is the array itself
+	//argv[0] contains the name of the program
+	for ( param = 1; param < argc; param++ ) {
+		if(strcmp(argv[param],"-a")==0) {
+			//arcade mode
+			//player 2 is the computer
+			p->arcade = true;
+		}
+		else if(strcmp(argv[param],"-x")==0) {
+			//display width
+			if(++param < argc) p->display.width = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-y")==0) {
+			//display height
+			if(++param < argc) p->display.height = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-s")==0) {
+			//font size
+			if(++param < argc) p->fontsize = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-l")==0) {
+			//level
+			if(++param < argc) p->level = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-p1")==0) {
+			//player1 name
+			if(++param < argc) strcpy(p->p1.name, argv[param]);
+		}
+		else if(strcmp(argv[param],"-p2")==0) {
+			//player2 name
+			if(++param < argc) strcpy(p->p2.name, argv[param]);
+		}
+		else if(strcmp(argv[param],"-m")==0) {
+			//maxscore
+			if(++param < argc) p->maxscore = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"-h")==0) {
+			Usage();
+			return false;
+		}
+	}//end-of-for
+
+	return true;
+
+	return true;
 } // end-of-function CreateGameData
 
 
