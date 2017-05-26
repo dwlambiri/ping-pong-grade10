@@ -144,7 +144,7 @@ static struct PongData pong = {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 SetBackgroundColor(ALLEGRO_COLOR color) {
 	// set to yellow
 	al_clear_to_color(color);
@@ -161,7 +161,7 @@ SetBackgroundColor(ALLEGRO_COLOR color) {
 	  return true if ok false otherwise\n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 LoadBitmap(struct GameEntity* g, char* fname) {
 	g->fname = fname;
 	if((g->bmap = al_load_bitmap(fname)) == NULL ) {
@@ -183,7 +183,7 @@ LoadBitmap(struct GameEntity* g, char* fname) {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 InitialPosition(struct PongData* p) {
 
 	p->ball.xspeed = rand() % p->level - p->level/2;
@@ -220,7 +220,7 @@ InitialPosition(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 ProcessKeyPress(struct PongData* p) {
 
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
@@ -263,7 +263,7 @@ ProcessKeyPress(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 DrawText(struct PongData* p, char* text, int x ,int y) {
     al_draw_text(p->font, p->fcolor, x, y,ALLEGRO_ALIGN_CENTRE, text);
 } // end-of-function DrawText
@@ -278,7 +278,7 @@ DrawText(struct PongData* p, char* text, int x ,int y) {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 DisplayTextQH(struct PongData* p, char* text) {
 	DrawText(p, text, p->display.width/2, p->display.height/4);
 } // end-of-function DisplayText
@@ -292,7 +292,7 @@ DisplayTextQH(struct PongData* p, char* text) {
 	  Returns false if escape key is pressed\n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 DisplayTextAndWaitForKey(struct PongData* p,char* text) {
 
 	DisplayTextQH(p, text);
@@ -318,7 +318,7 @@ DisplayTextAndWaitForKey(struct PongData* p,char* text) {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 DrawBitmap(struct GameEntity* g) {
 	al_draw_bitmap(g->bmap, g->xposition, g->yposition, 0);
 
@@ -333,7 +333,7 @@ DrawBitmap(struct GameEntity* g) {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 DrawObjects(struct PongData* p) {
 
 	SetBackgroundColor(p->bcolor);
@@ -351,7 +351,7 @@ DrawObjects(struct PongData* p) {
 	  true if there is a collision with top or bottom\n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 CheckTopBottomCollision(struct PongData* p) {
 
 	if (p->ball.yposition > (p->display.height-p->ball.height)) {
@@ -377,7 +377,7 @@ CheckTopBottomCollision(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 CheckSideCollitions(struct PongData* p) {
 
 	if (p->ball.xposition >= (p->display.width-p->ball.width) ){
@@ -403,7 +403,7 @@ CheckSideCollitions(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 PrintRoundWinner(struct PongData* p) {
 
 	al_stop_timer(p->timer);
@@ -444,7 +444,7 @@ PrintRoundWinner(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 PlaySound(ALLEGRO_SAMPLE* s) {
 	al_play_sample(s, 1.0, 0.0,1.0,ALLEGRO_PLAYMODE_ONCE,NULL);
 } // end-of-function PlaySound
@@ -460,7 +460,7 @@ PlaySound(ALLEGRO_SAMPLE* s) {
 	  true if there is a collision false otherwise\n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 CheckPaletteCollision(struct PongData* p) {
 
 	if (    p->ball.xposition+ p->ball.width>= p->p1.ge.xposition &&
@@ -499,7 +499,7 @@ CheckPaletteCollision(struct PongData* p) {
 	  return true if round is finished\n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 UpdateBallPosition(struct PongData* p) {
 
 	p->ball.xposition = p->ball.xposition + p->ball.xspeed;
@@ -522,7 +522,7 @@ UpdateBallPosition(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-int
+static int
 minSpeed(int a, int b) {
 
 	if(a < b) return a;
@@ -540,7 +540,7 @@ minSpeed(int a, int b) {
 	  \n
   --------------------------------------------------------------------------
  */
-void
+static void
 HAL9000AI(struct PongData* p) {
 
 	//update only when ball moves towards the player
@@ -569,7 +569,7 @@ HAL9000AI(struct PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 GameLoop(struct PongData* p) {
 
 	al_start_timer(p->timer);
