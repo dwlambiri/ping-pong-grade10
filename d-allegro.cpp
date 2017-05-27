@@ -24,8 +24,10 @@ static const int FONTSIZE = 24;
 static const int LEVEL = 20;
 static const int MAXSCORE = 10;
 static const int maxfonts_c = 3;
+static const int maxcolours_c = 4;
 
 enum FONTSIZES { smallFont_c = 0, regularFont_c = 1, largeFont_c =2};
+enum COLOURS {yellow_c = 0, blue_c = 1, white_c = 2, green_c = 3};
 
 static const char P1FNAME[]  =  "player1.png";
 static const char P2FNAME[] =   "player2.png";
@@ -120,7 +122,8 @@ typedef struct PongData {
 	ALLEGRO_TIMER *timer;
 	ALLEGRO_TIMER *hal9000;
 	ALLEGRO_FONT *font[maxfonts_c];
-	ALLEGRO_COLOR bcolor;
+	ALLEGRO_COLOR bcolorarray[maxcolours_c];
+	ALLEGRO_COLOR* bcolor;
 	ALLEGRO_COLOR fcolor;
 	ALLEGRO_SAMPLE *startsample;
 } PongData;
@@ -451,7 +454,7 @@ DrawBitmap(GameEntity* g) {
 static void
 DrawObjects(PongData* p) {
 
-	SetBackgroundColor(p->bcolor);
+	SetBackgroundColor(*(p->bcolor));
 	DrawBitmap(&(p->p1.ge));
 	DrawBitmap(&(p->p2.ge));
 	DrawBitmap(&(p->ball));
@@ -797,6 +800,7 @@ CreateGameData(int argc, char **argv) {
 	strcpy(p->p2.ge.bitmapFileName, P2FNAME);
 	strcpy(p->ball.bitmapFileName, BALLFNAME);
 
+	p->bcolor = &(p->bcolorarray[yellow_c]);
 
 	//loop that processes the command line arguments.
 	//argc is the size of the argument's array and argv is the array itself
@@ -859,6 +863,27 @@ CreateGameData(int argc, char **argv) {
 			//player 2 sound file name
 			if(++param < argc) strcpy(p->p2.audioFileName, argv[param]);
 		}
+		else if(strcmp(argv[param],"colourscheme")==0) {
+			//player 2 bitmap file name
+			if(++param < argc) {
+				switch (argv[param][0]) {
+					case 'y':
+						p->bcolor = &(p->bcolorarray[yellow_c]);
+						break;
+					case 'b':
+						p->bcolor = &(p->bcolorarray[blue_c]);
+						break;
+					case 'w':
+						p->bcolor = &(p->bcolorarray[white_c]);
+						break;
+					case 'g':
+						p->bcolor = &(p->bcolorarray[green_c]);
+						break;
+					default:
+						break;
+				} //end-switch(argv[param][0])
+			}
+		}
 	}//end-of-for
 
 	return true;
@@ -913,7 +938,11 @@ InitGame() {
 	}
 
 	p->display.display = al_create_display(p->display.width, p->display.height);
-	p->bcolor = al_map_rgb(255, 255, 0);
+	p->bcolorarray[yellow_c] = al_map_rgb(255, 255, 0);
+	p->bcolorarray[blue_c] = al_map_rgb(0, 0, 255);
+	p->bcolorarray[white_c] = al_map_rgb(255, 255, 255);
+	p->bcolorarray[green_c] = al_map_rgb(0, 255, 0);
+
 	p->fcolor = al_map_rgb(0, 0, 0);
 	p->timer = al_create_timer(REFRESHTIME);
 	p->eventqueue = al_create_event_queue();
@@ -937,7 +966,7 @@ InitGame() {
 
 	InitialPosition(p);
 
-	SetBackgroundColor(p->bcolor);
+	SetBackgroundColor(*(p->bcolor));
 
 	return true;
 } // end-of-function InitGame
@@ -955,7 +984,7 @@ void
 GameRun() {
 
 	PongData* p = &pong;
-	SetBackgroundColor(p->bcolor);
+	SetBackgroundColor(*(p->bcolor));
 	if(DisplayTextAndWaitBegin(p) == true) {
 		GameLoop(p);
 	}
