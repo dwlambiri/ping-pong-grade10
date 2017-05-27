@@ -44,7 +44,7 @@ static const char halname[] = "HAL9000";
 	\n
   ---------------------------------------------------------------------------
  */
-struct GameEntity {
+typedef struct GameEntity {
 	int xposition;
 	int yposition;
 	int xspeed;
@@ -53,7 +53,7 @@ struct GameEntity {
 	int height;
 	ALLEGRO_BITMAP* bmap;
 	char* fname;
-};
+}GameEntity;
 
 #define INITGE {0, 0, 0, 0, 0, 0, NULL, NULL }
 
@@ -66,12 +66,12 @@ struct GameEntity {
 	\n
   ---------------------------------------------------------------------------
  */
-struct Player {
+typedef struct Player {
 	unsigned int score;
-	struct GameEntity ge;
+	GameEntity ge;
 	char name[MAXNAME];
 	ALLEGRO_SAMPLE *sample;
-};
+}Player;
 
 
 /**
@@ -83,11 +83,11 @@ struct Player {
 	\n
   ---------------------------------------------------------------------------
  */
-struct Display {
+typedef struct Display {
 	int width;
 	int height;
 	ALLEGRO_DISPLAY *display;
-};
+} Display;
 
 /**
   ---------------------------------------------------------------------------
@@ -98,14 +98,14 @@ struct Display {
 	\n
   ---------------------------------------------------------------------------
  */
-struct PongData {
-	struct Player p1;
-	struct Player p2;
-	struct GameEntity   ball;
-	struct Display display;
+typedef struct PongData {
+	Player p1;
+	Player p2;
+	GameEntity   ball;
+	Display display;
 	bool   arcade;
 	int    level;
-	struct Player* roundWinner;
+	Player* roundWinner;
 	int    fontsize;
 	unsigned int maxscore;
 
@@ -116,12 +116,12 @@ struct PongData {
 	ALLEGRO_FONT *font;
 	ALLEGRO_COLOR bcolor;
 	ALLEGRO_COLOR fcolor;
-};
+} PongData;
 
 //======== Game Data ===========
 
 //declaring the main data variable of the game
-static struct PongData pong = {
+static PongData pong = {
 		{0, INITGE, "", NULL},
 		{0, INITGE, "", NULL},
 		INITGE,
@@ -162,7 +162,7 @@ SetBackgroundColor(ALLEGRO_COLOR color) {
   --------------------------------------------------------------------------
  */
 static bool
-LoadBitmap(struct GameEntity* g, char* fname) {
+LoadBitmap(GameEntity* g, char* fname) {
 	g->fname = fname;
 	if((g->bmap = al_load_bitmap(fname)) == NULL ) {
 		printf("cannot load %s\n ", fname);
@@ -184,7 +184,7 @@ LoadBitmap(struct GameEntity* g, char* fname) {
   --------------------------------------------------------------------------
  */
 static void
-InitialPosition(struct PongData* p) {
+InitialPosition(PongData* p) {
 
 	p->ball.xspeed = rand() % p->level - p->level/2;
 	if((p->ball.xspeed >= -4) && (p->ball.xspeed <= 0))
@@ -221,7 +221,7 @@ InitialPosition(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 static bool
-ProcessKeyPress(struct PongData* p) {
+ProcessKeyPress(PongData* p) {
 
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
 		switch (p->ev.keyboard.keycode){
@@ -264,7 +264,7 @@ ProcessKeyPress(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 static void
-DrawText(struct PongData* p, char* text, int x ,int y) {
+DrawText(PongData* p, char* text, int x ,int y) {
     al_draw_text(p->font, p->fcolor, x, y,ALLEGRO_ALIGN_CENTRE, text);
 } // end-of-function DrawText
 
@@ -279,7 +279,7 @@ DrawText(struct PongData* p, char* text, int x ,int y) {
   --------------------------------------------------------------------------
  */
 static void
-DisplayTextQH(struct PongData* p, char* text) {
+DisplayTextQH(PongData* p, char* text) {
 	DrawText(p, text, p->display.width/2, p->display.height/4);
 } // end-of-function DisplayText
 
@@ -293,7 +293,7 @@ DisplayTextQH(struct PongData* p, char* text) {
   --------------------------------------------------------------------------
  */
 static bool
-DisplayTextAndWaitForKey(struct PongData* p,char* text) {
+DisplayTextAndWaitForKey(PongData* p,char* text) {
 
 	DisplayTextQH(p, text);
 	al_flip_display();
@@ -319,7 +319,7 @@ DisplayTextAndWaitForKey(struct PongData* p,char* text) {
   --------------------------------------------------------------------------
  */
 static void
-DrawBitmap(struct GameEntity* g) {
+DrawBitmap(GameEntity* g) {
 	al_draw_bitmap(g->bmap, g->xposition, g->yposition, 0);
 
 } // end-of-function DrawBitmap
@@ -334,7 +334,7 @@ DrawBitmap(struct GameEntity* g) {
   --------------------------------------------------------------------------
  */
 static void
-DrawObjects(struct PongData* p) {
+DrawObjects(PongData* p) {
 
 	SetBackgroundColor(p->bcolor);
 	DrawBitmap(&(p->p1.ge));
@@ -352,7 +352,7 @@ DrawObjects(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 static bool
-CheckTopBottomCollision(struct PongData* p) {
+CheckTopBottomCollision(PongData* p) {
 
 	if (p->ball.yposition > (p->display.height-p->ball.height)) {
 		p->ball.yposition = p->display.height-p->ball.height;
@@ -378,7 +378,7 @@ CheckTopBottomCollision(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 static bool
-CheckSideCollitions(struct PongData* p) {
+CheckSideCollitions(PongData* p) {
 
 	if (p->ball.xposition >= (p->display.width-p->ball.width) ){
 		p->p2.score++;
@@ -404,7 +404,7 @@ CheckSideCollitions(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 static bool
-PrintRoundWinner(struct PongData* p) {
+PrintRoundWinner(PongData* p) {
 
 	al_stop_timer(p->timer);
 	if(p->arcade) al_stop_timer(p->hal9000);
@@ -461,7 +461,7 @@ PlaySound(ALLEGRO_SAMPLE* s) {
   --------------------------------------------------------------------------
  */
 static bool
-CheckPaletteCollision(struct PongData* p) {
+CheckPaletteCollision(PongData* p) {
 
 	if (    p->ball.xposition+ p->ball.width>= p->p1.ge.xposition &&
 			p->ball.yposition + p->ball.height >= p->p1.ge.yposition  &&
@@ -500,7 +500,7 @@ CheckPaletteCollision(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 static bool
-UpdateBallPosition(struct PongData* p) {
+UpdateBallPosition(PongData* p) {
 
 	p->ball.xposition = p->ball.xposition + p->ball.xspeed;
 	p->ball.yposition = p->ball.yposition + p->ball.yspeed;
@@ -541,7 +541,7 @@ minSpeed(int a, int b) {
   --------------------------------------------------------------------------
  */
 static void
-HAL9000AI(struct PongData* p) {
+HAL9000AI(PongData* p) {
 
 	//update only when ball moves towards the player
 	if(p->ball.xspeed > 0) return;
@@ -570,7 +570,7 @@ HAL9000AI(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 static bool
-GameLoop(struct PongData* p) {
+GameLoop(PongData* p) {
 
 	al_start_timer(p->timer);
 	if(p->arcade == true) {
@@ -640,7 +640,7 @@ GameLoop(struct PongData* p) {
   --------------------------------------------------------------------------
  */
 static void
-GameExit(struct PongData* p) {
+GameExit(PongData* p) {
 
 	al_rest(0.0);
 	al_destroy_display(p->display.display);
@@ -673,7 +673,7 @@ CreateGameData(int argc, char **argv) {
 	//sets the default player 1 and player 2 names
 	strcpy(pong.p1.name, "Player1");
 	strcpy(pong.p2.name, "Player2");
-	struct PongData* p = &pong;
+	PongData* p = &pong;
 	int param = 0;
 	//loop that processes the command line arguments.
 	//argc is the size of the argument's array and argv is the array itself
@@ -732,7 +732,7 @@ CreateGameData(int argc, char **argv) {
  */
 bool
 InitGame() {
-	struct PongData* p = &pong;
+	PongData* p = &pong;
 	//seed random number generator with time
 	srand (time(NULL));
 	//initiallises allegro libraries
@@ -810,7 +810,7 @@ InitGame() {
 void
 GameRun() {
 
-	struct PongData* p = &pong;
+	PongData* p = &pong;
 	SetBackgroundColor(p->bcolor);
 	if(DisplayTextAndWaitForKey(p,(char*)"Press Any Key To Begin or ESC to Terminate") == true) {
 		GameLoop(p);

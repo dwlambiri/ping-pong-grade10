@@ -55,7 +55,7 @@ main(int argc, char **argv) {
 
 	int num = 0;
 	char** p = GetParameters(&num);
-	printf("HERE");
+	//printf("Adress of GameRun = %x \n", &GameRun);
 	if(CreateGameData(num, p) == false) return 0;
 
 	if(InitGame() == false ) {
