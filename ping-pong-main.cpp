@@ -19,22 +19,16 @@
 	  \n
   --------------------------------------------------------------------------
  */
-//static void
-//Usage(void) {
-//
-//	printf("Program Options\n");
-//	printf("   -a starts the program in arcade mode. by default the game is two player mode	\n");
-//	printf("   -x number - sets the display  width. default is 1600\n");
-//	printf("   -y number - sets the display height. default is 1200\n");
-//	printf("   -s number - set font size. default is 24\n");
-//	printf("   -l number - set level value. default is 10. higher is faster\n");
-//	printf("   -m number - set max score value. default is 10.\n");
-//	printf("   -p1 name - player1 name\n");
-//	printf("   -p2 name - player2 name\n");
-//
-//} // end-of-function Usage
+static void
+Usage(void) {
 
-char** GetParameters(int* n);
+	printf("Program Options\n");
+	printf("   -c configFileName - selects the config file, if no config file present, default is config.txt	\n");
+	printf("   -h - displays command line parameters \n");
+
+} // end-of-function Usage
+
+char** GetParameters(int* , char*);
 
 /**
   ---------------------------------------------------------------------------
@@ -52,9 +46,21 @@ char** GetParameters(int* n);
 int
 main(int argc, char **argv) {
 
-
+	char* configFileName = NULL;
 	int num = 0;
-	char** p = GetParameters(&num);
+
+	for (int  param = 1; param < argc; param++ ) {
+		if (strcmp(argv[param], "-c") == 0) {
+			if (++param < argc) {
+				configFileName = argv[param];
+			} //end-of-if(++param < argc)
+		} else if (strcmp(argv[param], "-h") == 0) {
+			Usage();
+			return 1;
+		}
+	} //end-of-for
+
+	char** p = GetParameters(&num, configFileName);
 	//printf("Adress of GameRun = %x \n", &GameRun);
 	if(CreateGameData(num, p) == false) return 0;
 

@@ -709,11 +709,9 @@ CreateGameData(int argc, char **argv) {
 	strcpy(p->ball.bitmapFileName, BALLFNAME);
 
 
-	int param = 0;
 	//loop that processes the command line arguments.
 	//argc is the size of the argument's array and argv is the array itself
-	//argv[0] contains the name of the program
-	for ( param = 0; param < argc; param++ ) {
+	for ( int param = 0; param < argc; param++ ) {
 		if(strcmp(argv[param],"arcade")==0) {
 			//arcade mode
 			//player 2 is the computer

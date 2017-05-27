@@ -22,8 +22,19 @@ static char* params[numberParams_c];
   --------------------------------------------------------------------------
  */
 char**
-GetParameters(int* n) {
-	FILE* fptr = fopen(configName, "r");
+GetParameters(int* n, char* configFileName) {
+
+
+	FILE* fptr = NULL;
+	if (configFileName == NULL) {
+		fptr = fopen(configName, "r");
+	} else {
+		fptr = fopen(configFileName, "r");
+		if (fptr == NULL) {
+			fptr = fopen(configName, "r");
+		} //end-of-if(fptr == NULL)
+	}
+
 	int counter = 0;
 	char* buffer = text;
 	const char* delim = "\t\r\n =";
