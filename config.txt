@@ -11,13 +11,17 @@ maxscore = 5
 level     = 50
 arcade = true
 
-fontfile = mexcellent3d.ttf
+#fontfile = mexcellent3d.ttf
+#fontfile = pirulen.ttf
+fontfile =  fofbb_reg.ttf
 player1bmp = player1.png
 player2bmp = player2.png
 ballbmp = ball.png
 
-player1sound = p1sound.ogg
-player2sound = p2sound.ogg
+#player1sound = p1sound.ogg
+#player2sound = p2sound.ogg
+player1sound = tennisserve.wav
+player2sound = tennisserve.wav
 
 # possible values yellow, blue, white, green
 colourscheme = green
