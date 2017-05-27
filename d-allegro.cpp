@@ -79,6 +79,7 @@ typedef struct Player {
 	char audioFileName[MAXNAME];
 	ALLEGRO_SAMPLE *sample;
 	bool keyPress[2];
+	int paddleSpeed;
 }Player;
 
 
@@ -133,8 +134,8 @@ typedef struct PongData {
 
 //declaring the main data variable of the game
 static PongData pong = {
-		{0, INITGE, "", "",NULL, false, false},
-		{0, INITGE, "", "", NULL, false, false},
+		{0, INITGE, "", "",NULL, false, false, PLAYERSPEED},
+		{0, INITGE, "", "", NULL, false, false, PLAYERSPEED},
 		INITGE,
 		{SCREEN_W, SCREEN_H, NULL},
 		false,
@@ -296,15 +297,21 @@ ProcessKeyPress(PongData* p) {
 		switch (p->ev.keyboard.keycode){
 		case ALLEGRO_KEY_UP:
 			p->p1.keyPress[0] = true;
+			p->p1.keyPress[1] = false;
 			break;
 		case ALLEGRO_KEY_DOWN:
+			p->p1.keyPress[0] = false;
 			p->p1.keyPress[1] = true;
 			break;
 		case ALLEGRO_KEY_W:
 			if(p->arcade == false ) p->p2.keyPress[0] = true;
+			else p->p2.keyPress[0] = false;
+			p->p2.keyPress[1] = false;
 			break;
 		case ALLEGRO_KEY_S:
 			if(p->arcade == false ) p->p2.keyPress[1] = true;
+			else p->p2.keyPress[1] = true;
+			p->p1.keyPress[0] = false;
 			break;
 		}
 	}
@@ -343,22 +350,22 @@ ProcessKeyPress(PongData* p) {
 static void
 MovePaddles(PongData* p) {
 	if(p->p1.keyPress[0] ==true){
-		p->p1.ge.yposition -= PLAYERSPEED;
+		p->p1.ge.yposition -= p->p1.paddleSpeed;
 		if(p->p1.ge.yposition < 0) p->p1.ge.yposition = 0;
 	}
 	if (p->p1.keyPress[1] ==true) {
-		p->p1.ge.yposition += PLAYERSPEED;
+		p->p1.ge.yposition += p->p1.paddleSpeed;
 		if(p->p1.ge.yposition >= (p->display.height - p->p1.ge.height))
 				p->p1.ge.yposition = (p->display.height - p->p1.ge.height);
 	} //end-of-if(p->p1.keyPress[1] ==true)
 
 	if (p->p2.keyPress[0] == true) {
-		p->p2.ge.yposition -= PLAYERSPEED;
+		p->p2.ge.yposition -= p->p2.paddleSpeed;
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
 	} //end-of-if(p->p2.keyPress[0] == true)
 
 	if (p->p2.keyPress[1] == true) {
-		p->p2.ge.yposition += PLAYERSPEED;
+		p->p2.ge.yposition += p->p2.paddleSpeed;
 		if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
 			p->p2.ge.yposition = (p->display.height - p->p2.ge.height);
 	} //end-of-if(p->p2.keyPress[1] == true)
@@ -699,17 +706,22 @@ minSpeed(int a, int b) {
 static void
 HAL9000AI(PongData* p) {
 
-	//update only when ball moves towards the player
+    	//update only when ball moves towards the player
 	if(p->ball.xspeed > 0) return;
+	int mult = 1;
+	if(p->ball.xposition > p->display.width/2) mult = 0;
+	if(p->ball.xposition <= p->display.width/2) mult = 1;
+	if(p->ball.xposition <= p->display.width/4) mult = 2;
+	if(p->ball.xposition <= p->display.width/8) mult = 4;
 	if(p->ball.yspeed > 0) {
-		if(p->ball.yposition > p->p2.ge.yposition )
-			p->p2.ge.yposition += p->display.height/minSpeed(COMPUTERSPEED,p->ball.yspeed) ;
+		if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height/2) )
+			p->p2.ge.yposition += p->p2.paddleSpeed*mult;
 		if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
 			p->p2.ge.yposition = (p->display.height - p->p2.ge.height);
 	}
 	else {
-		if(p->ball.yposition < p->p2.ge.yposition )
-			p->p2.ge.yposition -= p->display.height/minSpeed(COMPUTERSPEED,-1*p->ball.yspeed);
+		if(p->ball.yposition < (p->p2.ge.yposition + p->p2.ge.height/2) )
+			p->p2.ge.yposition -= p->p2.paddleSpeed*mult;
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
 	}
 } // end-of-function HAL9000AI
@@ -907,6 +919,14 @@ CreateGameData(int argc, char **argv) {
 		else if(strcmp(argv[param],"player2sound")==0) {
 			//player 2 sound file name
 			if(++param < argc) strcpy(p->p2.audioFileName, argv[param]);
+		}
+		else if(strcmp(argv[param],"p1paddleSpeed")==0) {
+			//player 1 paddle speed
+			if(++param < argc) p->p1.paddleSpeed = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"p2paddleSpeed")==0) {
+			//player 2 paddle speed
+			if(++param < argc) p->p2.paddleSpeed = atoi(argv[param]);
 		}
 		else if(strcmp(argv[param],"colourscheme")==0) {
 			//player 2 bitmap file name
