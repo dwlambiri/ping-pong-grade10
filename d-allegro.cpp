@@ -78,6 +78,7 @@ typedef struct Player {
 	char name[MAXNAME];
 	char audioFileName[MAXNAME];
 	ALLEGRO_SAMPLE *sample;
+	bool keyPress[2];
 }Player;
 
 
@@ -132,8 +133,8 @@ typedef struct PongData {
 
 //declaring the main data variable of the game
 static PongData pong = {
-		{0, INITGE, "", NULL},
-		{0, INITGE, "", NULL},
+		{0, INITGE, "", "",NULL, false, false},
+		{0, INITGE, "", "", NULL, false, false},
 		INITGE,
 		{SCREEN_W, SCREEN_H, NULL},
 		false,
@@ -294,33 +295,77 @@ ProcessKeyPress(PongData* p) {
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
 		switch (p->ev.keyboard.keycode){
 		case ALLEGRO_KEY_UP:
-			p->p1.ge.yposition -= p->display.height/PLAYERSPEED;
-			if(p->p1.ge.yposition < 0) p->p1.ge.yposition = 0;
+			p->p1.keyPress[0] = true;
 			break;
 		case ALLEGRO_KEY_DOWN:
-			p->p1.ge.yposition += p->display.height/PLAYERSPEED;
-			if(p->p1.ge.yposition >= (p->display.height - p->p1.ge.height))
-				p->p1.ge.yposition = (p->display.height - p->p1.ge.height);
+			p->p1.keyPress[1] = true;
 			break;
 		case ALLEGRO_KEY_W:
-			if(p->arcade == false ) p->p2.ge.yposition -= p->display.height/PLAYERSPEED;
-			else break;
-			if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
+			if(p->arcade == false ) p->p2.keyPress[0] = true;
 			break;
 		case ALLEGRO_KEY_S:
-			if(p->arcade == false ) p->p2.ge.yposition += p->display.height/PLAYERSPEED;
-			else break;
-			if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
-				p->p2.ge.yposition = (p->display.height - p->p2.ge.height);
+			if(p->arcade == false ) p->p2.keyPress[1] = true;
+			break;
+		}
+	}
+	else if (p->ev.type == ALLEGRO_EVENT_KEY_UP){
+		switch (p->ev.keyboard.keycode){
+		case ALLEGRO_KEY_UP:
+			p->p1.keyPress[0] = false;
+			break;
+		case ALLEGRO_KEY_DOWN:
+			p->p1.keyPress[1] = false;
+			break;
+		case ALLEGRO_KEY_W:
+			if(p->arcade == false ) p->p2.keyPress[0] = false;
+			break;
+		case ALLEGRO_KEY_S:
+			if(p->arcade == false ) p->p2.keyPress[1] = false;
 			break;
 		case ALLEGRO_KEY_ESCAPE:
 			//exit game
 			return false;
-
 		}
 	}
 	return true;
 } // end-of-function ProcessKeyPress
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 27, 2017
+   @mname   MovePaddles
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static void
+MovePaddles(PongData* p) {
+	if(p->p1.keyPress[0] ==true){
+		p->p1.ge.yposition -= PLAYERSPEED;
+		if(p->p1.ge.yposition < 0) p->p1.ge.yposition = 0;
+	}
+	if (p->p1.keyPress[1] ==true) {
+		p->p1.ge.yposition += PLAYERSPEED;
+		if(p->p1.ge.yposition >= (p->display.height - p->p1.ge.height))
+				p->p1.ge.yposition = (p->display.height - p->p1.ge.height);
+	} //end-of-if(p->p1.keyPress[1] ==true)
+
+	if (p->p2.keyPress[0] == true) {
+		p->p2.ge.yposition -= PLAYERSPEED;
+		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
+	} //end-of-if(p->p2.keyPress[0] == true)
+
+	if (p->p2.keyPress[1] == true) {
+		p->p2.ge.yposition += PLAYERSPEED;
+		if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
+			p->p2.ge.yposition = (p->display.height - p->p2.ge.height);
+	} //end-of-if(p->p2.keyPress[1] == true)
+
+} // end-of-function MovePaddles
+
+
 
 /**
   ---------------------------------------------------------------------------
@@ -696,9 +741,9 @@ GameLoop(PongData* p) {
 
 		al_wait_for_event(p->eventqueue, &(p->ev));
 
-//		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-//					return false;
-//		}
+		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+					return false;
+		}
 		if(roundwin == true) {
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 					   p->ev.timer.source == p->timer) {
@@ -720,7 +765,7 @@ GameLoop(PongData* p) {
 				//user has ended game
 				return false;
 			}
-
+			MovePaddles(p);
 			if(p->arcade == true &&
 			   p->ev.type == ALLEGRO_EVENT_TIMER &&
 			   p->ev.timer.source == p->hal9000) {
