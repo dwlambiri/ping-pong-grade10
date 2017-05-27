@@ -35,6 +35,8 @@ static const char FONTNAME[] =  "pirulen.ttf";
 
 static const char halname[] = "HAL9000";
 
+typedef unsigned int uint;
+
 /**
   ---------------------------------------------------------------------------
    @author     dwlambiri
@@ -67,7 +69,7 @@ typedef struct GameEntity {
   ---------------------------------------------------------------------------
  */
 typedef struct Player {
-	unsigned int score;
+	uint score;
 	GameEntity ge;
 	char name[MAXNAME];
 	ALLEGRO_SAMPLE *sample;
@@ -107,7 +109,7 @@ typedef struct PongData {
 	int    level;
 	Player* roundWinner;
 	int    fontsize;
-	unsigned int maxscore;
+	uint maxscore;
 
 	ALLEGRO_EVENT ev;
 	ALLEGRO_EVENT_QUEUE *eventqueue;
