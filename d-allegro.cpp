@@ -54,7 +54,7 @@ typedef struct GameEntity {
 	int width;
 	int height;
 	ALLEGRO_BITMAP* bmap;
-	char* fname;
+	char bitmapFileName[MAXNAME];
 }GameEntity;
 
 #define INITGE {0, 0, 0, 0, 0, 0, NULL, NULL }
@@ -72,6 +72,7 @@ typedef struct Player {
 	uint score;
 	GameEntity ge;
 	char name[MAXNAME];
+	char audioFileName[MAXNAME];
 	ALLEGRO_SAMPLE *sample;
 }Player;
 
@@ -110,6 +111,7 @@ typedef struct PongData {
 	Player* roundWinner;
 	int    fontsize;
 	uint maxscore;
+	char fontFileName[MAXNAME];
 
 	ALLEGRO_EVENT ev;
 	ALLEGRO_EVENT_QUEUE *eventqueue;
@@ -164,10 +166,9 @@ SetBackgroundColor(ALLEGRO_COLOR color) {
   --------------------------------------------------------------------------
  */
 static bool
-LoadBitmap(GameEntity* g, char* fname) {
-	g->fname = fname;
-	if((g->bmap = al_load_bitmap(fname)) == NULL ) {
-		printf("cannot load %s\n ", fname);
+LoadBitmap(GameEntity* g) {
+	if((g->bmap = al_load_bitmap(g->bitmapFileName)) == NULL ) {
+		printf("cannot load %s\n ", g->bitmapFileName);
 		return false;
 	}
 	g->width = al_get_bitmap_width(g->bmap);
@@ -175,6 +176,27 @@ LoadBitmap(GameEntity* g, char* fname) {
 
 	return true;
 } // end-of-function LoadBitmap
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 27, 2017
+   @mname   LoadAudio
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static bool
+LoadAudio(Player* p) {
+	p->sample = al_load_sample( p->audioFileName );
+	if (p->sample == NULL) {
+	   printf( "Audio clip sample %s not loaded!\n", p->audioFileName );
+	   return false;
+	}
+	return true;
+} // end-of-function LoadAudio
+
 
 /**
   ---------------------------------------------------------------------------
@@ -673,9 +695,20 @@ GameExit(PongData* p) {
 bool
 CreateGameData(int argc, char **argv) {
 	//sets the default player 1 and player 2 names
-	strcpy(pong.p1.name, "Player1");
-	strcpy(pong.p2.name, "Player2");
+
+
 	PongData* p = &pong;
+
+	strcpy(p->p1.name, "Player1");
+	strcpy(p->p2.name, "Player2");
+	strcpy(p->fontFileName, FONTNAME);
+	strcpy(p->p1.audioFileName, P1SOUND);
+	strcpy(p->p2.audioFileName, P2SOUND);
+	strcpy(p->p1.ge.bitmapFileName, P1FNAME);
+	strcpy(p->p2.ge.bitmapFileName, P2FNAME);
+	strcpy(p->ball.bitmapFileName, BALLFNAME);
+
+
 	int param = 0;
 	//loop that processes the command line arguments.
 	//argc is the size of the argument's array and argv is the array itself
@@ -715,6 +748,30 @@ CreateGameData(int argc, char **argv) {
 			//maxscore
 			if(++param < argc) p->maxscore = atoi(argv[param]);
 		}
+		else if(strcmp(argv[param],"fontfile")==0) {
+			//font file name
+			if(++param < argc) strcpy(p->fontFileName, argv[param]);
+		}
+		else if(strcmp(argv[param],"player1bmp")==0) {
+			//player 1 bitmap file name
+			if(++param < argc) strcpy(p->p1.ge.bitmapFileName, argv[param]);
+		}
+		else if(strcmp(argv[param],"player2bmp")==0) {
+			//player 2 bitmap file name
+			if(++param < argc) strcpy(p->p2.ge.bitmapFileName, argv[param]);
+		}
+		else if(strcmp(argv[param],"ballbmp")==0) {
+			//ball bitmap file name
+			if(++param < argc) strcpy(p->ball.bitmapFileName, argv[param]);
+		}
+		else if(strcmp(argv[param],"player1sound")==0) {
+			//player 1 sound file name
+			if(++param < argc) strcpy(p->p1.audioFileName, argv[param]);
+		}
+		else if(strcmp(argv[param],"player2sound")==0) {
+			//player 2 sound file name
+			if(++param < argc) strcpy(p->p2.audioFileName, argv[param]);
+		}
 	}//end-of-for
 
 	return true;
@@ -750,11 +807,11 @@ InitGame() {
 	al_reserve_samples(2);
 
 	//tries to load font file
-	p->font = al_load_ttf_font(FONTNAME, p->fontsize,0 );
+	p->font = al_load_ttf_font(p->fontFileName, p->fontsize,0 );
 
 	//error message if the font file is NULL
 	if (p->font == NULL){
-	      printf("Could not load %s.\n", FONTNAME);
+	      printf("Could not load %s.\n", p->fontFileName);
 	      return false;
 	}
 
@@ -779,19 +836,12 @@ InitGame() {
 	}
 	else p->hal9000 = NULL;
 
-	if(LoadBitmap(&(p->p1.ge), (char*)P1FNAME) == false) return false;
-	if(LoadBitmap(&(p->p2.ge), (char*)P2FNAME) == false) return false;
-	if(LoadBitmap(&(p->ball), (char*)BALLFNAME) == false) return false;
-	p->p1.sample = al_load_sample( P1SOUND );
-	if (p->p1.sample == NULL) {
-	   printf( "Audio clip sample for player 1 not loaded!\n" );
-	   return false;
-	}
-	p->p2.sample = al_load_sample( P2SOUND );
-	if (p->p2.sample == NULL) {
-	   printf( "Audio clip sample for player 2 not loaded!\n" );
-	   return false;
-	}
+	if(LoadBitmap(&(p->p1.ge)) == false) return false;
+	if(LoadBitmap(&(p->p2.ge)) == false) return false;
+	if(LoadBitmap(&(p->ball)) == false) return false;
+
+	if(LoadAudio(&(p->p1)) == false) return false;
+	if(LoadAudio(&(p->p2)) == false) return false;
 
 	InitialPosition(p);
 
