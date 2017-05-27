@@ -653,29 +653,6 @@ GameExit(struct PongData* p) {
 	al_destroy_bitmap(p->ball.bmap);
 } // end-of-function GameExit
 
-/**
-  ---------------------------------------------------------------------------
-   @author  dwlambiri
-   @date    May 22, 2017
-   @mname   Usage
-   @details
-	  \n
-  --------------------------------------------------------------------------
- */
-static void
-Usage(void) {
-
-	printf("Program Options\n");
-	printf("   -a starts the program in arcade mode. by default the game is two player mode	\n");
-	printf("   -x number - sets the display  width. default is 1600\n");
-	printf("   -y number - sets the display height. default is 1200\n");
-	printf("   -s number - set font size. default is 24\n");
-	printf("   -l number - set level value. default is 10. higher is faster\n");
-	printf("   -m number - set max score value. default is 10.\n");
-	printf("   -p1 name - player1 name\n");
-	printf("   -p2 name - player2 name\n");
-
-} // end-of-function Usage
 
 
 //======== PUBLIC FUNCITONS ===========
@@ -701,43 +678,40 @@ CreateGameData(int argc, char **argv) {
 	//loop that processes the command line arguments.
 	//argc is the size of the argument's array and argv is the array itself
 	//argv[0] contains the name of the program
-	for ( param = 1; param < argc; param++ ) {
-		if(strcmp(argv[param],"-a")==0) {
+	for ( param = 0; param < argc; param++ ) {
+		if(strcmp(argv[param],"arcade")==0) {
 			//arcade mode
 			//player 2 is the computer
-			p->arcade = true;
+			if(++param < argc && (strcmp(argv[param],"true") == 0)) p->arcade = true;
+			else p->arcade = false;
 		}
-		else if(strcmp(argv[param],"-x")==0) {
+		else if(strcmp(argv[param],"screenwidth")==0) {
 			//display width
 			if(++param < argc) p->display.width = atoi(argv[param]);
 		}
-		else if(strcmp(argv[param],"-y")==0) {
+		else if(strcmp(argv[param],"screenheight")==0) {
 			//display height
 			if(++param < argc) p->display.height = atoi(argv[param]);
 		}
-		else if(strcmp(argv[param],"-s")==0) {
+		else if(strcmp(argv[param],"fontsize")==0) {
 			//font size
 			if(++param < argc) p->fontsize = atoi(argv[param]);
 		}
-		else if(strcmp(argv[param],"-l")==0) {
+		else if(strcmp(argv[param],"level")==0) {
 			//level
 			if(++param < argc) p->level = atoi(argv[param]);
 		}
-		else if(strcmp(argv[param],"-p1")==0) {
+		else if(strcmp(argv[param],"p1name")==0) {
 			//player1 name
 			if(++param < argc) strcpy(p->p1.name, argv[param]);
 		}
-		else if(strcmp(argv[param],"-p2")==0) {
+		else if(strcmp(argv[param],"p2name")==0) {
 			//player2 name
 			if(++param < argc) strcpy(p->p2.name, argv[param]);
 		}
-		else if(strcmp(argv[param],"-m")==0) {
+		else if(strcmp(argv[param],"maxscore")==0) {
 			//maxscore
 			if(++param < argc) p->maxscore = atoi(argv[param]);
-		}
-		else if(strcmp(argv[param],"-h")==0) {
-			Usage();
-			return false;
 		}
 	}//end-of-for
 

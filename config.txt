@@ -1,0 +1,12 @@
+# this is a comment
+
+screenwidth = 2200
+screenheight = 1000
+fontsize = 34
+
+p1name = DRitchie
+p2name = BKernigan
+
+maxscore = 5
+level     = 50
+arcade = true
