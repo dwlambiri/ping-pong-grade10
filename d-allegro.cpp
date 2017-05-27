@@ -23,7 +23,9 @@ static const float COMPUTERSPEED = 10.0;
 static const int FONTSIZE = 24;
 static const int LEVEL = 20;
 static const int MAXSCORE = 10;
+static const int maxfonts_c = 3;
 
+enum FONTSIZES { smallFont_c = 0, regularFont_c = 1, largeFont_c =2};
 
 static const char P1FNAME[]  =  "player1.png";
 static const char P2FNAME[] =   "player2.png";
@@ -117,9 +119,10 @@ typedef struct PongData {
 	ALLEGRO_EVENT_QUEUE *eventqueue;
 	ALLEGRO_TIMER *timer;
 	ALLEGRO_TIMER *hal9000;
-	ALLEGRO_FONT *font;
+	ALLEGRO_FONT *font[maxfonts_c];
 	ALLEGRO_COLOR bcolor;
 	ALLEGRO_COLOR fcolor;
+	ALLEGRO_SAMPLE *startsample;
 } PongData;
 
 //======== Game Data ===========
@@ -197,6 +200,39 @@ LoadAudio(Player* p) {
 	return true;
 } // end-of-function LoadAudio
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 27, 2017
+   @mname   LoadFont
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+bool
+LoadFont(PongData* p, int size) {
+
+	int fontSize = p->fontsize;
+	switch (size) {
+		case smallFont_c:
+			fontSize /= 2;
+			break;
+		case largeFont_c:
+			fontSize *= 2;
+			break;
+		default:
+			break;
+	} //end-switch(size)
+	p->font[size] = al_load_ttf_font(p->fontFileName, fontSize,0 );
+
+	//error message if the font file is NULL
+	if (p->font[size] == NULL){
+	      printf("Could not load %s.\n", p->fontFileName);
+	      return false;
+	}
+	return true;
+} // end-of-function LoadFont
+
 
 /**
   ---------------------------------------------------------------------------
@@ -228,6 +264,11 @@ InitialPosition(PongData* p) {
 	if(p->ball.xspeed > 0 ) p->ball.xposition = p->p2.ge.xposition + p->p2.ge.width;
 	else p->ball.xposition = p->p1.ge.xposition - p->ball.width;
 	p->ball.yposition = p->display.height/2 - (p->ball.height/2);
+	if (p->ball.xspeed > 0) {
+		p->startsample = p->p2.sample;
+	} else {
+		p->startsample = p->p1.sample;
+	}
 
 
 } // end-of-function InitialPosition
@@ -287,39 +328,45 @@ ProcessKeyPress(PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-static void
-DrawText(PongData* p, char* text, int x ,int y) {
-    al_draw_text(p->font, p->fcolor, x, y,ALLEGRO_ALIGN_CENTRE, text);
+static int
+DrawText(PongData* p, char* text, int x ,int y, int size) {
+    al_draw_text(p->font[size], p->fcolor, x, y,ALLEGRO_ALIGN_CENTRE, text);
+    int fsize = p->fontsize;
+    switch (size) {
+		case smallFont_c:
+			fsize /= 2;
+			break;
+		case largeFont_c:
+			fsize *= 2;
+			break;
+		default:
+			break;
+	} //end-switch(size)
+    return y+fsize+10;
 } // end-of-function DrawText
 
 
-/**
-  ---------------------------------------------------------------------------
-   @author  dwlambiri
-   @date    May 22, 2017
-   @mname   DisplayText
-   @details
-	  \n
-  --------------------------------------------------------------------------
- */
-static void
-DisplayTextQH(PongData* p, char* text) {
-	DrawText(p, text, p->display.width/2, p->display.height/4);
-} // end-of-function DisplayText
 
 /**
   ---------------------------------------------------------------------------
    @author  dwlambiri
    @date    May 22, 2017
-   @mname   DisplayTextAndWaitForKey
+   @mname   DisplayTextAndWaitBegin
    @details
 	  Returns false if escape key is pressed\n
   --------------------------------------------------------------------------
  */
 static bool
-DisplayTextAndWaitForKey(PongData* p,char* text) {
+DisplayTextAndWaitBegin(PongData* p) {
 
-	DisplayTextQH(p, text);
+	int next = DrawText(p, (char*)"Welcome to Pong", p->display.width/2, p->display.height/4, largeFont_c);
+	DrawText(p, (char*)"(c) dwlambiri 2017", p->display.width/2, next, smallFont_c);
+	if (p->arcade == true) {
+		next = DrawText(p, (char*)"Arcade Mode (HAL is left)", p->display.width/2, p->display.height/2, regularFont_c);
+	} else {
+		next = DrawText(p, (char*)"Arcade Mode (Two Player Mode)", p->display.width/2, p->display.height/2, regularFont_c);
+	}
+	DrawText(p, (char*)"Press a key to begin", p->display.width/2, next, regularFont_c);
 	al_flip_display();
 	al_wait_for_event(p->eventqueue, &(p->ev));
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
@@ -331,7 +378,51 @@ DisplayTextAndWaitForKey(PongData* p,char* text) {
 		}
 	}
 	return true;
-} // end-of-function DisplayTextAndWaitForKey
+} // end-of-function DisplayTextAndWaitBegin
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 22, 2017
+   @mname   DisplayTextAndWaitBegin
+   @details
+	  Returns false if escape key is pressed\n
+  --------------------------------------------------------------------------
+ */
+static bool
+DisplayTextAndWaitRoundWin(PongData* p) {
+
+	char textBuffer[255];
+	if(p->roundWinner->score == p->maxscore) {
+		sprintf(textBuffer, "%s Wins The Game!!",p->roundWinner->name);
+		int next = DrawText(p, textBuffer, p->display.width/2, p->display.height/4, largeFont_c);
+		sprintf(textBuffer, "Score: %s %d %s %d",p->p2.name, p->p2.score, p->p1.name, p->p1.score);
+		DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
+
+
+		p->p2.score = 0;
+		p->p1.score = 0;
+	}
+	else {
+		sprintf(textBuffer, "%s Wins The Round!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
+		DrawText(p, textBuffer, p->display.width/2, p->display.height/4, regularFont_c);
+
+	}
+
+
+	DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, p->display.height/2, regularFont_c);
+	al_flip_display();
+	al_wait_for_event(p->eventqueue, &(p->ev));
+	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
+		switch (p->ev.keyboard.keycode){
+		case ALLEGRO_KEY_ESCAPE:
+			//exit game
+			return false;
+
+		}
+	}
+	return true;
+} // end-of-function DisplayTextAndWaitBegin
 
 /**
   ---------------------------------------------------------------------------
@@ -418,6 +509,23 @@ CheckSideCollitions(PongData* p) {
 	return false;
 } // end-of-function CheckSideCollitions
 
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 23, 2017
+   @mname   PlaySound
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static void
+PlaySound(ALLEGRO_SAMPLE* s) {
+	if(s) al_play_sample(s, 1.0, 0.0,1.0,ALLEGRO_PLAYMODE_ONCE,NULL);
+} // end-of-function PlaySound
+
+
+
 /**
   ---------------------------------------------------------------------------
    @author  dwlambiri
@@ -436,42 +544,18 @@ PrintRoundWinner(PongData* p) {
 	InitialPosition(p);
 	DrawObjects(p);
 
-	char textBuffer[255];
-	if(p->roundWinner->score == p->maxscore) {
-		DrawText(p, (char*)"Press any key to start a new game or ESC to exit", p->display.width/2, p->display.height/3);
-		sprintf(textBuffer, "%s Wins The Game!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
-		p->p2.score = 0;
-		p->p1.score = 0;
-	}
-	else {
-		DrawText(p, (char*)"Press any key to start or ESC to exit", p->display.width/2, p->display.height/3);
-		sprintf(textBuffer, "%s Wins The Round!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
-	}
-	if(DisplayTextAndWaitForKey(p, textBuffer) == false) {
+	if(DisplayTextAndWaitRoundWin(p) == false) {
 		return false;
 	}
 	else {
 		al_start_timer(p->timer);
 		if(p->arcade) al_start_timer(p->hal9000);
+		PlaySound(p->startsample);
 	}
 
 	return true;
 } // end-of-function PrintRoundWinner
 
-
-/**
-  ---------------------------------------------------------------------------
-   @author  dwlambiri
-   @date    May 23, 2017
-   @mname   PlaySound
-   @details
-	  \n
-  --------------------------------------------------------------------------
- */
-static void
-PlaySound(ALLEGRO_SAMPLE* s) {
-	al_play_sample(s, 1.0, 0.0,1.0,ALLEGRO_PLAYMODE_ONCE,NULL);
-} // end-of-function PlaySound
 
 
 
@@ -604,7 +688,7 @@ GameLoop(PongData* p) {
 	bool roundwin = false;
 	int skipCounter = 0;
 	int maxSkip = 45;
-
+	PlaySound(p->startsample);
 	while (true){
 
 		al_wait_for_event(p->eventqueue, &(p->ev));
@@ -671,7 +755,12 @@ GameExit(PongData* p) {
 	al_destroy_timer(p->hal9000);
 	al_destroy_timer(p->timer);
 	al_destroy_event_queue(p->eventqueue);
-	al_destroy_font(p->font);
+	for (int  i = 0; i < maxfonts_c; i++ ) {
+		if (p->font[i]) {
+			al_destroy_font(p->font[i]);
+		} //end-of-if(p->font[i])
+	} //end-of-for
+
 	al_destroy_bitmap(p->p1.ge.bmap);
 	al_destroy_bitmap(p->p2.ge.bmap);
 	al_destroy_bitmap(p->ball.bmap);
@@ -805,13 +894,18 @@ InitGame() {
 	al_reserve_samples(2);
 
 	//tries to load font file
-	p->font = al_load_ttf_font(p->fontFileName, p->fontsize,0 );
+	if (LoadFont(p, smallFont_c) == false) {
+		return false;
+	} //end-of-if(LoadFont(p, smallFont_c) == false)
 
-	//error message if the font file is NULL
-	if (p->font == NULL){
-	      printf("Could not load %s.\n", p->fontFileName);
-	      return false;
-	}
+	if (LoadFont(p, regularFont_c) == false) {
+		return false;
+	} //end-of-if(LoadFont(p, regularFont_c) == false)
+
+	if (LoadFont(p, largeFont_c) == false) {
+		return false;
+	} //end-of-if(LoadFont(p, largeFont_c) == false)
+
 
 	//IF game is in arcade mode, player 2 is HAL9000
 	if(p->arcade ==true) {
@@ -862,7 +956,7 @@ GameRun() {
 
 	PongData* p = &pong;
 	SetBackgroundColor(p->bcolor);
-	if(DisplayTextAndWaitForKey(p,(char*)"Press Any Key To Begin or ESC to Terminate") == true) {
+	if(DisplayTextAndWaitBegin(p) == true) {
 		GameLoop(p);
 	}
 
