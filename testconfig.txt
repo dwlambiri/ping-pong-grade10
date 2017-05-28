@@ -8,7 +8,7 @@ p1name = DRitchie
 p2name = BKernigan
 
 maxscore = 2
-level     = 50
+maxballspeed    = 50
 arcade = false
 
 fontfile = mexcellent3d.ttf

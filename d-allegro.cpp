@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include "d-allegro.h"
 
 static const int MAXNAME = 200;
@@ -21,10 +22,11 @@ static const float PLAYERSPEED = 10.0;
 static const float COMPUTERSPEED = 10.0;
 //static const int SOMENUMBER = 11;
 static const int FONTSIZE = 24;
-static const int LEVEL = 20;
 static const int MAXSCORE = 10;
 static const int maxfonts_c = 3;
 static const int maxcolours_c = 4;
+static const int minballspeed_c = PLAYERSPEED;
+static const int LEVEL = 2*minballspeed_c;
 
 enum FONTSIZES { smallFont_c = 0, regularFont_c = 1, largeFont_c =2};
 enum COLOURS {yellow_c = 0, blue_c = 1, white_c = 2, green_c = 3};
@@ -113,11 +115,12 @@ typedef struct PongData {
 	GameEntity   ball;
 	Display display;
 	bool   arcade;
-	int    level;
+	int    maxballspeed;
 	Player* roundWinner;
 	int    fontsize;
 	uint maxscore;
 	char fontFileName[MAXNAME];
+	char winSoundFile[MAXNAME];
 
 	ALLEGRO_EVENT ev;
 	ALLEGRO_EVENT_QUEUE *eventqueue;
@@ -128,6 +131,7 @@ typedef struct PongData {
 	ALLEGRO_COLOR* bcolor;
 	ALLEGRO_COLOR fcolor;
 	ALLEGRO_SAMPLE *startsample;
+	ALLEGRO_SAMPLE *winsample;
 } PongData;
 
 //======== Game Data ===========
@@ -145,6 +149,32 @@ static PongData pong = {
 		MAXSCORE
 };
 
+//======= FUNCTION DECLARATIONS =====
+static void SetBackgroundColor(ALLEGRO_COLOR color);
+static bool LoadBitmap(GameEntity* g);
+static bool LoadAudio(Player* p);
+static bool LoadWinAudio(PongData* p );
+static bool LoadFont(PongData* p, int size);
+static void InitialPosition(PongData* p);
+static bool ProcessKeyPress(PongData* p);
+static void MovePaddles(PongData* p);
+static int DrawText(PongData* p, char* text, int x ,int y, int size);
+static bool DisplayTextAndWaitBegin(PongData* p);
+static bool DisplayTextAndWaitRoundWin(PongData* p);
+static void DrawBitmap(GameEntity* g);
+static void DrawObjects(PongData* p);
+static bool CheckTopBottomCollision(PongData* p);
+static bool CheckSideCollitions(PongData* p);
+static void PlaySound(ALLEGRO_SAMPLE* s);
+static bool PrintRoundWinner(PongData* p);
+static bool CheckPaletteCollision(PongData* p);
+static bool UpdateBallPosition(PongData* p);
+static int minSpeed(int a, int b);
+static void HAL9000AI(PongData* p);
+static bool GameLoop(PongData* p);
+static void GameExit(PongData* p);
+static void PaletteBounceCalc(GameEntity* ball, Player* p, int);
+static int SignOfNumber(int value);
 
 //======= PRIVATE FUNCTIONS =========
 /**
@@ -208,13 +238,34 @@ LoadAudio(Player* p) {
 /**
   ---------------------------------------------------------------------------
    @author  dwlambiri
+   @date    May 28, 2017
+   @mname   LoadWinAudio
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static bool
+LoadWinAudio(PongData* p ) {
+	p->winsample = al_load_sample( p->winSoundFile );
+	if (p->winsample == NULL) {
+	   printf( "Audio clip sample %s not loaded!\n", p->winSoundFile );
+	   return false;
+	}
+	return true;
+} // end-of-function LoadWinAudio
+
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
    @date    May 27, 2017
    @mname   LoadFont
    @details
 	  \n
   --------------------------------------------------------------------------
  */
-bool
+static bool
 LoadFont(PongData* p, int size) {
 
 	int fontSize = p->fontsize;
@@ -251,13 +302,41 @@ LoadFont(PongData* p, int size) {
 static void
 InitialPosition(PongData* p) {
 
-	p->ball.xspeed = rand() % p->level - p->level/2;
-	if((p->ball.xspeed >= -4) && (p->ball.xspeed <= 0))
-		p->ball.xspeed = -7;
-	if((p->ball.xspeed > 0) && (p->ball.xspeed <= 4))
-			p->ball.xspeed = 7;
-	p->ball.yspeed = rand() % p->level - p->level/2;
+	p->ball.xspeed =  minballspeed_c + rand() % (p->maxballspeed -minballspeed_c);
+	if (p->roundWinner) {
+		//printf("Round winner name %s\n",p->roundWinner->name);
+		if (p->roundWinner == &(p->p1)) {
+			//printf("Assigning ball to %s\n",p->roundWinner->name);
+			p->ball.xspeed *= -1;
+		} //end-of-if(p->roundWinner == &(p->p1))
+	} else {
+		//if there is no roundwinnner, it is the first serve of the game
+		//we need to pick at random a starting player
+		switch (rand() %2) {
+			case 0:
+				// player 1
+				p->ball.xspeed *= -1;
+				break;
+			default:
+				//player 2
+				break;
+		} //end-switch(rand() %2)
+	}//end-of-if(p->roundWinner)
+
+	static const float ratio_c = (float) p->display.height / (2*p->display.width);
+	float maxyspeed = ratio_c * abs(p->ball.xspeed);
+
+
+	p->ball.yspeed = rand() % (int) maxyspeed;
 	if(p->ball.yspeed == 0) p->ball.yspeed = 3;
+	switch (rand() %2) {
+		case 0:
+			//serve up
+			p->ball.yspeed *= -1;
+			break;
+		default:
+			break;
+	} //end-switch(rand() %2)
 
 	p->p1.ge.xposition = p->display.width - p->p1.ge.width;
 	p->p1.ge.yposition = p->display.height/2 - (p->p1.ge.height/2);
@@ -313,6 +392,9 @@ ProcessKeyPress(PongData* p) {
 			else p->p2.keyPress[1] = true;
 			p->p1.keyPress[0] = false;
 			break;
+		case ALLEGRO_KEY_ESCAPE:
+			//exit game
+			return false;
 		}
 	}
 	else if (p->ev.type == ALLEGRO_EVENT_KEY_UP){
@@ -453,7 +535,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 		int next = DrawText(p, textBuffer, p->display.width/2, p->display.height/4, largeFont_c);
 		sprintf(textBuffer, "Score: %s %d %s %d",p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 		DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
-
+		PlaySound(p->winsample);
 
 		p->p2.score = 0;
 		p->p1.score = 0;
@@ -461,21 +543,17 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 	else {
 		sprintf(textBuffer, "%s Wins The Round!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 		DrawText(p, textBuffer, p->display.width/2, p->display.height/4, regularFont_c);
-
+		printf(" =======\n");
 	}
 
 
 	DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, p->display.height/2, regularFont_c);
 	al_flip_display();
+	al_flush_event_queue(p->eventqueue);
 	al_wait_for_event(p->eventqueue, &(p->ev));
-	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
-		switch (p->ev.keyboard.keycode){
-		case ALLEGRO_KEY_ESCAPE:
-			//exit game
-			return false;
+	if(ProcessKeyPress(p) == false) return false;
+	al_flush_event_queue(p->eventqueue);
 
-		}
-	}
 	return true;
 } // end-of-function DisplayTextAndWaitBegin
 
@@ -613,6 +691,61 @@ PrintRoundWinner(PongData* p) {
 
 
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 28, 2017
+   @mname   SignOfNumber
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static int
+SignOfNumber(int value) {
+
+	if (value >= 0) {
+		return 1;
+	} //end-of-if(value > 0)
+	return -1;
+} // end-of-function SignOfNumber
+
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 28, 2017
+   @mname   PaletteBounceCalc
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static void
+PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed) {
+
+	int newxspeed = abs(ball->xspeed) + (rand()% (minballspeed_c / 2));
+	if (newxspeed > maxballspeed) newxspeed = maxballspeed;
+	ball->xspeed = SignOfNumber(ball->xspeed) *-1 *newxspeed;
+
+	static const int zones_c = 4;
+
+	int zonelength = p->ge.height/zones_c;
+	int zonenum = (ball->yposition - p->ge.yposition) / zonelength;
+	if (zonenum < 0) {
+		zonenum = 0;
+	}
+	if (zonenum > zones_c -1) {
+		zonenum = zones_c -1;
+	} //end-of-if(zonenum > zones_c -1)
+
+	ball->yspeed += 5*(zonenum - zones_c / 2);
+
+	PlaySound(p->sample);
+
+
+
+} // end-of-function PaletteBounceCalc
+
 
 /**
   ---------------------------------------------------------------------------
@@ -630,10 +763,7 @@ CheckPaletteCollision(PongData* p) {
 			p->ball.yposition + p->ball.height >= p->p1.ge.yposition  &&
 			p->ball.yposition  <= p->p1.ge.yposition + p->p1.ge.height){
 
-			p->ball.xspeed *= -1;
-			p->ball.xspeed -= rand() %2;
-			if(p->ball.xspeed >=0) p->ball.xspeed = -5;
-			PlaySound(p->p1.sample);
+			PaletteBounceCalc(&(p->ball), &(p->p1), p->maxballspeed);
 			return true;
 	}
 
@@ -641,10 +771,7 @@ CheckPaletteCollision(PongData* p) {
 			p->ball.yposition + p->ball.height >= p->p2.ge.yposition  &&
 			p->ball.yposition  <= p->p2.ge.yposition + p->p2.ge.height){
 
-		    p->ball.xspeed *= -1;
-		    p->ball.xspeed += rand() %2;
-		    if(p->ball.xspeed <=0) p->ball.xspeed = 5;
-		    PlaySound(p->p2.sample);
+		    PaletteBounceCalc(&(p->ball), &(p->p2), p->maxballspeed);
 			return true;
 	}
 
@@ -668,10 +795,10 @@ UpdateBallPosition(PongData* p) {
 	p->ball.xposition = p->ball.xposition + p->ball.xspeed;
 	p->ball.yposition = p->ball.yposition + p->ball.yspeed;
 
-	CheckPaletteCollision(p);
+	if(CheckPaletteCollision(p) == false) {
+		if(CheckSideCollitions(p) == true) return true;
+	}
 	CheckTopBottomCollision(p);
-	if(CheckSideCollitions(p) == true) return true;
-
 
 	return false;
 } // end-of-function UpdateBallPosition
@@ -708,20 +835,37 @@ HAL9000AI(PongData* p) {
 
     	//update only when ball moves towards the player
 	if(p->ball.xspeed > 0) return;
-	int mult = 1;
+	float mult = 1;
 	if(p->ball.xposition > p->display.width/2) mult = 0;
 	if(p->ball.xposition <= p->display.width/2) mult = 1;
+	if(p->ball.xposition <= p->display.width/3) mult = 1.5;
 	if(p->ball.xposition <= p->display.width/4) mult = 2;
-	if(p->ball.xposition <= p->display.width/8) mult = 4;
+	if(p->ball.xposition <= p->display.width/8) mult = 3;
 	if(p->ball.yspeed > 0) {
-		if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height/2) )
-			p->p2.ge.yposition += p->p2.paddleSpeed*mult;
+		if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height/2)  ){
+			float f = p->p2.paddleSpeed*mult;
+			printf("HAL Moving DOWN %d\n", (int) f);
+			p->p2.ge.yposition += (int)f;
+		}
+		else if(p->ball.yposition < p->p2.ge.yposition){
+			float f = p->p2.paddleSpeed*mult;
+			printf("HAL Moving UP %d\n", (int) f);
+			p->p2.ge.yposition -= (int) f;
+		}
 		if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
 			p->p2.ge.yposition = (p->display.height - p->p2.ge.height);
 	}
 	else {
-		if(p->ball.yposition < (p->p2.ge.yposition + p->p2.ge.height/2) )
-			p->p2.ge.yposition -= p->p2.paddleSpeed*mult;
+		if(p->ball.yposition < (p->p2.ge.yposition + p->p2.ge.height/2) ) {
+			float f = p->p2.paddleSpeed*mult;
+			printf("HAL Moving UP %d\n", (int) f);
+			p->p2.ge.yposition -= (int) f;
+		}
+		else if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height)){
+			float f = p->p2.paddleSpeed*mult;
+			printf("HAL Moving DOWN %d\n", (int) f);
+			p->p2.ge.yposition += (int)f;
+		}
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
 	}
 } // end-of-function HAL9000AI
@@ -880,9 +1024,12 @@ CreateGameData(int argc, char **argv) {
 			//font size
 			if(++param < argc) p->fontsize = atoi(argv[param]);
 		}
-		else if(strcmp(argv[param],"level")==0) {
+		else if(strcmp(argv[param],"maxballspeed")==0) {
 			//level
-			if(++param < argc) p->level = atoi(argv[param]);
+			if(++param < argc) {
+				p->maxballspeed = atoi(argv[param]);
+				if (p->maxballspeed <= LEVEL) p->maxballspeed = LEVEL;
+			}
 		}
 		else if(strcmp(argv[param],"p1name")==0) {
 			//player1 name
@@ -899,6 +1046,10 @@ CreateGameData(int argc, char **argv) {
 		else if(strcmp(argv[param],"fontfile")==0) {
 			//font file name
 			if(++param < argc) strcpy(p->fontFileName, argv[param]);
+		}
+		else if(strcmp(argv[param],"winSound")==0) {
+			//font file name
+			if(++param < argc) strcpy(p->winSoundFile, argv[param]);
 		}
 		else if(strcmp(argv[param],"player1bmp")==0) {
 			//player 1 bitmap file name
@@ -1017,7 +1168,7 @@ InitGame() {
 	al_register_event_source(p->eventqueue, al_get_timer_event_source(p->timer));
 	if(p->arcade == true) {
 		printf("Arcade Mode Detected\n");
-		p->hal9000 = al_create_timer(1.0/COMPUTERSPEED);
+		p->hal9000 = al_create_timer(1.0/(float) p->p2.paddleSpeed);
 		al_register_event_source(p->eventqueue, al_get_timer_event_source(p->hal9000));
 	}
 	else p->hal9000 = NULL;
@@ -1026,8 +1177,9 @@ InitGame() {
 	if(LoadBitmap(&(p->p2.ge)) == false) return false;
 	if(LoadBitmap(&(p->ball)) == false) return false;
 
-	if(LoadAudio(&(p->p1)) == false) return false;
-	if(LoadAudio(&(p->p2)) == false) return false;
+	LoadAudio(&(p->p1));
+	LoadAudio(&(p->p2));
+	LoadWinAudio(p);
 
 	InitialPosition(p);
 

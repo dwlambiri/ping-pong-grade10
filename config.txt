@@ -1,6 +1,6 @@
 # this is a comment
 # no '"' characters are allowed
-screenwidth = 2200
+screenwidth = 2000
 screenheight = 1000
 fontsize = 34
 
@@ -8,7 +8,7 @@ p1name = DRitchie
 p2name = BKernigan
 
 maxscore = 5
-level     = 50
+maxballspeed     = 20
 arcade = true
 
 #fontfile = mexcellent3d.ttf
@@ -26,5 +26,7 @@ player2sound = tennisserve.wav
 # possible values yellow, blue, white, green
 colourscheme = green
 
-p1paddleSpeed = 30
+p1paddleSpeed = 20
 p2paddleSpeed = 20
+
+winSound = applause6.wav
