@@ -530,7 +530,11 @@ DisplayTextAndWaitBegin(PongData* p) {
 	} else {
 		next = DrawText(p, (char*)"Arcade Mode (Two Player Mode)", p->display.width/2, p->display.height/2, regularFont_c);
 	}
-	DrawText(p, (char*)"Press a key to begin", p->display.width/2, next, regularFont_c);
+	next = DrawText(p, (char*)"Press a key to begin", p->display.width/2, next, regularFont_c);
+
+	if(p->level == maxlevel_c) {
+		DrawText(p, (char*)"You've got balls mate: Balls of Fury Mode activated!!", p->display.width/2, next, regularFont_c);
+	}
 	al_flip_display();
 	al_wait_for_event(p->eventqueue, &(p->ev));
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
