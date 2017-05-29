@@ -13,6 +13,8 @@ extern bool debugon;
 extern bool traceon;
 extern int  debuglevel;
 
+
+#if 1
 #define DEBUG(s) if(debugon && debuglevel == debug_c) printf("Debug@[%s:%d] %s\n", __FILE__, __LINE__,s)
 #define DEBUG2(s,d) if(debugon && debuglevel == debug_c) printf("Debug@[%s:%d] %s %d\n", __FILE__, __LINE__,s, d)
 #define INFO(s) if(debugon && debuglevel <= info_c) printf("Info@[%s:%d] %s\n", __FILE__, __LINE__,s)
@@ -20,6 +22,13 @@ extern int  debuglevel;
 #define ERROR(s) if(debugon && debuglevel <= error_c) printf("Error@[%s:%d] %s\n", __FILE__, __LINE__,s)
 
 #define TRACE() if(traceon) printf("Trace@[%s:%d:%s]\n", __FILE__, __LINE__, __PRETTY_FUNCTION__)
-
+#else
+#define DEBUG(s)
+#define DEBUG2(s,d)
+#define INFO(s)
+#define WARN(s)
+#define ERROR(s)
+#define TRACE()
+#endif
 
 #endif /* PONG_DEBUG_H_ */

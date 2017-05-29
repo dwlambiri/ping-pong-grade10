@@ -196,7 +196,8 @@ static bool LoadPlayerBitmap(GameEntity* g, int level);
  */
 static void
 SetBackgroundColor(ALLEGRO_COLOR color) {
-	// set to yellow
+	// set to color
+	TRACE();
 	al_clear_to_color(color);
 } // end-of-function SetBackgroundColor
 
@@ -211,6 +212,7 @@ SetBackgroundColor(ALLEGRO_COLOR color) {
  */
 static bool
 LoadPlayerBitmap(GameEntity* g, int level) {
+	TRACE();
 	if((g->bmap = al_load_bitmap(g->bitmapFileName)) == NULL ) {
 		printf("cannot load %s\n ", g->bitmapFileName);
 		return false;
@@ -233,6 +235,7 @@ LoadPlayerBitmap(GameEntity* g, int level) {
  */
 static bool
 LoadBitmap(GameEntity* g) {
+	TRACE();
 	if((g->bmap = al_load_bitmap(g->bitmapFileName)) == NULL ) {
 		printf("cannot load %s\n ", g->bitmapFileName);
 		return false;
@@ -255,6 +258,7 @@ LoadBitmap(GameEntity* g) {
  */
 static bool
 LoadAudio(Player* p) {
+	TRACE();
 	p->sample = al_load_sample( p->audioFileName );
 	if (p->sample == NULL) {
 	   printf( "Audio clip sample %s not loaded!\n", p->audioFileName );
@@ -274,6 +278,7 @@ LoadAudio(Player* p) {
  */
 static bool
 LoadWinAudio(PongData* p ) {
+	TRACE();
 	p->winsample = al_load_sample( p->winSoundFile );
 	if (p->winsample == NULL) {
 	   printf( "Audio clip sample %s not loaded!\n", p->winSoundFile );
@@ -296,6 +301,7 @@ LoadWinAudio(PongData* p ) {
 static bool
 LoadFont(PongData* p, int size) {
 
+	TRACE();
 	int fontSize = p->fontsize;
 	switch (size) {
 		case smallFont_c:
@@ -330,6 +336,7 @@ LoadFont(PongData* p, int size) {
 static void
 InitialPosition(PongData* p) {
 
+	TRACE();
 	p->ball.xspeed =  minballspeed_c + rand() % (p->maxballspeed -minballspeed_c);
 	if (p->roundWinner) {
 		//printf("Round winner name %s\n",p->roundWinner->name);
@@ -400,6 +407,7 @@ InitialPosition(PongData* p) {
 static bool
 ProcessKeyPress(PongData* p) {
 
+	TRACE();
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
 		switch (p->ev.keyboard.keycode){
 		case ALLEGRO_KEY_UP:
@@ -460,6 +468,7 @@ ProcessKeyPress(PongData* p) {
 static void
 MovePaddles(PongData* p) {
 
+	TRACE();
 	if(p->p1.keyPress[0] ==true){
 		p->p1.ge.yposition -= p->p1.paddleSpeed;
 		if(p->p1.ge.yposition < 0) p->p1.ge.yposition = 0;
@@ -496,6 +505,7 @@ MovePaddles(PongData* p) {
  */
 static int
 DrawText(PongData* p, char* text, int x ,int y, int size) {
+	TRACE();
     al_draw_text(p->font[size], p->fcolor, x, y,ALLEGRO_ALIGN_CENTRE, text);
     int fsize = p->fontsize;
     switch (size) {
@@ -525,6 +535,7 @@ DrawText(PongData* p, char* text, int x ,int y, int size) {
 static bool
 DisplayTextAndWaitBegin(PongData* p) {
 
+	TRACE();
 	int next = DrawText(p, (char*)"Welcome to Pong", p->display.width/2, p->display.height/4, largeFont_c);
 	al_flush_event_queue(p->eventqueue);
 	DrawText(p, (char*)"(c) dwlambiri 2017", p->display.width/2, next, smallFont_c);
@@ -563,6 +574,7 @@ DisplayTextAndWaitBegin(PongData* p) {
 static bool
 DisplayTextAndWaitRoundWin(PongData* p) {
 
+	TRACE();
 	char textBuffer[255];
 	if(p->roundWinner->score == p->maxscore) {
 		sprintf(textBuffer, "%s Wins The Game!!",p->roundWinner->name);
@@ -607,6 +619,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
  */
 static void
 DrawBitmap(GameEntity* g) {
+	TRACE();
 	al_draw_bitmap(g->bmap, g->xposition, g->yposition, 0);
 
 } // end-of-function DrawBitmap
@@ -622,6 +635,7 @@ DrawBitmap(GameEntity* g) {
  */
 static void
 DrawBitmapSection(GameEntity* g) {
+	TRACE();
 	al_draw_bitmap_region(g->bmap, 0, 0, g->width, g->height, g->xposition, g->yposition, 0);
 
 } // end-of-function DrawBitmapSection
@@ -639,6 +653,7 @@ DrawBitmapSection(GameEntity* g) {
 static void
 DrawObjects(PongData* p) {
 
+	TRACE();
 	SetBackgroundColor(*(p->bcolor));
 	DrawBitmapSection(&(p->p1.ge));
 	DrawBitmapSection(&(p->p2.ge));
@@ -657,6 +672,7 @@ DrawObjects(PongData* p) {
 static bool
 CheckTopBottomCollision(PongData* p) {
 
+	TRACE();
 	if (p->ball.yposition > (p->display.height-p->ball.height)) {
 		p->ball.yposition = p->display.height-p->ball.height;
 		if(p->ball.yspeed > 0) p->ball.yspeed *= -1;
@@ -683,6 +699,7 @@ CheckTopBottomCollision(PongData* p) {
 static bool
 CheckSideCollitions(PongData* p) {
 
+	TRACE();
 	if ((p->ball.xposition >= (p->display.width-p->ball.width)) &&(p->ball.xspeed > 0)){
 		p->p2.score++;
 		p->roundWinner = &(p->p2);
@@ -710,6 +727,7 @@ CheckSideCollitions(PongData* p) {
  */
 static void
 PlaySound(ALLEGRO_SAMPLE* s) {
+	TRACE();
 	if(s) al_play_sample(s, 1.0, 0.0,1.0,ALLEGRO_PLAYMODE_ONCE,NULL);
 } // end-of-function PlaySound
 
@@ -727,6 +745,7 @@ PlaySound(ALLEGRO_SAMPLE* s) {
 static bool
 PrintRoundWinner(PongData* p) {
 
+	TRACE();
 	al_stop_timer(p->timer);
 	if(p->arcade) al_stop_timer(p->hal9000);
 
@@ -778,7 +797,7 @@ SignOfNumber(int value) {
  */
 static void
 PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed, int level) {
-
+	TRACE();
 	int newxspeed = abs(ball->xspeed) + (rand()% (minballspeed_c / 2));
 	if (newxspeed > maxballspeed) newxspeed = maxballspeed;
 	ball->xspeed = SignOfNumber(ball->xspeed) *-1 *newxspeed;
@@ -817,7 +836,7 @@ PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed, int level) {
  */
 static bool
 CheckPaletteCollision(PongData* p) {
-
+	TRACE();
 	if (    p->ball.xposition+ p->ball.width>= p->p1.ge.xposition &&
 			p->ball.yposition + p->ball.height >= p->p1.ge.yposition  &&
 			p->ball.yposition  <= p->p1.ge.yposition + p->p1.ge.height){
@@ -850,7 +869,7 @@ CheckPaletteCollision(PongData* p) {
  */
 static bool
 UpdateBallPosition(PongData* p) {
-
+	TRACE();
 	p->ball.xposition = p->ball.xposition + p->ball.xspeed;
 	p->ball.yposition = p->ball.yposition + p->ball.yspeed;
 
@@ -892,6 +911,7 @@ minSpeed(int a, int b) {
 static void
 HAL9000AI(PongData* p) {
 
+	TRACE();
     	//update only when ball moves towards the player
 	if(p->ball.xspeed > 0) return;
 	float mult = 1;
@@ -943,6 +963,7 @@ HAL9000AI(PongData* p) {
 static bool
 GameLoop(PongData* p) {
 
+	TRACE();
 	al_start_timer(p->timer);
 	if(p->arcade == true) {
 		al_start_timer(p->hal9000);
@@ -1013,6 +1034,7 @@ GameLoop(PongData* p) {
 static void
 GameExit(PongData* p) {
 
+	TRACE();
 	al_rest(0.0);
 	al_destroy_display(p->display.display);
 	al_destroy_timer(p->hal9000);
@@ -1048,7 +1070,7 @@ bool
 CreateGameData(int argc, char **argv) {
 	//sets the default player 1 and player 2 names
 
-
+	TRACE();
 	PongData* p = &pong;
 
 	strcpy(p->p1.name, "Player1");
@@ -1185,6 +1207,7 @@ CreateGameData(int argc, char **argv) {
  */
 bool
 InitGame() {
+	TRACE();
 	PongData* p = &pong;
 	//seed random number generator with time
 	srand (time(NULL));
@@ -1266,6 +1289,7 @@ InitGame() {
 void
 GameRun() {
 
+	TRACE();
 	PongData* p = &pong;
 	SetBackgroundColor(*(p->bcolor));
 	if(DisplayTextAndWaitBegin(p) == true) {
