@@ -8,7 +8,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include "d-allegro.h"
+#include "pong-debug.h"
 
+
+//===== Public Data =====
+bool debugon = false;
+bool traceon = false;
+int  debuglevel = debug_c;
+
+#define VERSION "1.4"
 
 /**
   ---------------------------------------------------------------------------
@@ -25,6 +33,11 @@ Usage(void) {
 	printf("Program Options\n");
 	printf("   -c configFileName - selects the config file, if no config file present, default is config.txt	\n");
 	printf("   -h - displays command line parameters \n");
+	printf("   -d - enables debug mode \n");
+	printf("   -l debuglevel - sets the debug level (higher means less messages) \n");
+	printf("   -t - enables trace mode \n");
+	printf("   -v - prints the version of the program and when it was built \n");
+
 
 } // end-of-function Usage
 
@@ -57,6 +70,20 @@ main(int argc, char **argv) {
 		} else if (strcmp(argv[param], "-h") == 0) {
 			Usage();
 			return 1;
+		}
+		else if (strcmp(argv[param], "-d") == 0) {
+			debugon = true;
+		}
+		else if (strcmp(argv[param], "-t") == 0) {
+			traceon = true;
+		}
+		else if (strcmp(argv[param], "-v") == 0) {
+			printf("%s Version %s [Build %s %s]\n", argv[0], VERSION, __DATE__, __TIME__);
+		}
+		else if (strcmp(argv[param], "-l") == 0) {
+			if (++param < argc) {
+				debuglevel = atoi(argv[param]);
+			} //end-of-if(++param < argc)
 		}
 	} //end-of-for
 

@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include "pong-debug.h"
 
 static const char configName[] = "config.txt";
 static const int bufferSize_c = 1000;
@@ -39,7 +40,7 @@ GetParameters(int* n, char* configFileName) {
 	char* buffer = text;
 	const char* delim = "\t\r\n =";
 	if(fptr == NULL){
-		printf("The file does not exist");
+		INFO("The file does not exist");
 		*n = 0;
 		return params;
 	}

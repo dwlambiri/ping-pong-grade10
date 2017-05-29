@@ -1,6 +1,6 @@
 # this is a comment
 # no '"' characters are allowed
-screenwidth = 1000
+screenwidth = 2000
 screenheight = 1000
 fontsize = 34
 
@@ -30,4 +30,4 @@ p1paddleSpeed = 20
 p2paddleSpeed = 20
 
 winSound = applause6.wav
-level = 20
+level = 6

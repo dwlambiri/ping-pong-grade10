@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "d-allegro.h"
+#include "pong-debug.h"
 
 typedef unsigned int uint;
 
@@ -178,7 +179,7 @@ static int minSpeed(int a, int b);
 static void HAL9000AI(PongData* p);
 static bool GameLoop(PongData* p);
 static void GameExit(PongData* p);
-static void PaletteBounceCalc(GameEntity* ball, Player* p, int);
+static void PaletteBounceCalc(GameEntity* ball, Player* p, int, int);
 static int SignOfNumber(int value);
 static void DrawBitmapSection(GameEntity* g);
 static bool LoadPlayerBitmap(GameEntity* g, int level);
@@ -458,6 +459,7 @@ ProcessKeyPress(PongData* p) {
  */
 static void
 MovePaddles(PongData* p) {
+
 	if(p->p1.keyPress[0] ==true){
 		p->p1.ge.yposition -= p->p1.paddleSpeed;
 		if(p->p1.ge.yposition < 0) p->p1.ge.yposition = 0;
@@ -524,6 +526,7 @@ static bool
 DisplayTextAndWaitBegin(PongData* p) {
 
 	int next = DrawText(p, (char*)"Welcome to Pong", p->display.width/2, p->display.height/4, largeFont_c);
+	al_flush_event_queue(p->eventqueue);
 	DrawText(p, (char*)"(c) dwlambiri 2017", p->display.width/2, next, smallFont_c);
 	if (p->arcade == true) {
 		next = DrawText(p, (char*)"Arcade Mode (HAL is left)", p->display.width/2, p->display.height/2, regularFont_c);
@@ -574,7 +577,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 	else {
 		sprintf(textBuffer, "%s Wins The Round!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 		DrawText(p, textBuffer, p->display.width/2, p->display.height/4, regularFont_c);
-		printf(" =======\n");
+		DEBUG(" =======\n");
 	}
 
 
@@ -680,13 +683,14 @@ CheckTopBottomCollision(PongData* p) {
 static bool
 CheckSideCollitions(PongData* p) {
 
-	if (p->ball.xposition >= (p->display.width-p->ball.width) ){
+	if ((p->ball.xposition >= (p->display.width-p->ball.width)) &&(p->ball.xspeed > 0)){
 		p->p2.score++;
 		p->roundWinner = &(p->p2);
 		return true;
 
 	}
-	else if (p->ball.xposition <= 0 ){
+	else if ((p->ball.xposition <= 0) && (p->ball.xspeed < 0)){
+		TRACE();
 		p->p1.score++;
 		p->roundWinner = &(p->p1);
 		return true;
@@ -773,25 +777,28 @@ SignOfNumber(int value) {
   --------------------------------------------------------------------------
  */
 static void
-PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed) {
+PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed, int level) {
 
 	int newxspeed = abs(ball->xspeed) + (rand()% (minballspeed_c / 2));
 	if (newxspeed > maxballspeed) newxspeed = maxballspeed;
 	ball->xspeed = SignOfNumber(ball->xspeed) *-1 *newxspeed;
 
-	static const int zones_c = 4;
-
-	int zonelength = p->ge.height/zones_c;
-	int zonenum = (ball->yposition - p->ge.yposition) / zonelength;
-	if (zonenum < 0) {
-		zonenum = 0;
+	static const int zones_c = 8 - level;
+	if(level == maxlevel_c) {
+		ball->yspeed += 5;
 	}
-	if (zonenum > zones_c -1) {
-		zonenum = zones_c -1;
-	} //end-of-if(zonenum > zones_c -1)
+	else {
+		int zonelength = p->ge.height/zones_c;
+		int zonenum = (ball->yposition - p->ge.yposition) / zonelength;
+		if (zonenum < 0) {
+			zonenum = 0;
+		}
+		if (zonenum > zones_c -1) {
+			zonenum = zones_c -1;
+		} //end-of-if(zonenum > zones_c -1)
 
-	ball->yspeed += 5*(zonenum - zones_c / 2);
-
+		ball->yspeed += 5*(zonenum - zones_c / 2);
+	}
 	PlaySound(p->sample);
 
 
@@ -815,7 +822,7 @@ CheckPaletteCollision(PongData* p) {
 			p->ball.yposition + p->ball.height >= p->p1.ge.yposition  &&
 			p->ball.yposition  <= p->p1.ge.yposition + p->p1.ge.height){
 
-			PaletteBounceCalc(&(p->ball), &(p->p1), p->maxballspeed);
+			PaletteBounceCalc(&(p->ball), &(p->p1), p->maxballspeed, p->level);
 			return true;
 	}
 
@@ -823,7 +830,7 @@ CheckPaletteCollision(PongData* p) {
 			p->ball.yposition + p->ball.height >= p->p2.ge.yposition  &&
 			p->ball.yposition  <= p->p2.ge.yposition + p->p2.ge.height){
 
-		    PaletteBounceCalc(&(p->ball), &(p->p2), p->maxballspeed);
+		    PaletteBounceCalc(&(p->ball), &(p->p2), p->maxballspeed, p->level);
 			return true;
 	}
 
@@ -896,12 +903,12 @@ HAL9000AI(PongData* p) {
 	if(p->ball.yspeed > 0) {
 		if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height/2)  ){
 			float f = p->p2.paddleSpeed*mult;
-			printf("HAL Moving DOWN %d\n", (int) f);
+			DEBUG2("HAL Moving DOWN", (int)f);
 			p->p2.ge.yposition += (int)f;
 		}
 		else if(p->ball.yposition < p->p2.ge.yposition){
 			float f = p->p2.paddleSpeed*mult;
-			printf("HAL Moving UP %d\n", (int) f);
+			DEBUG2("HAL Moving UP", (int)f);
 			p->p2.ge.yposition -= (int) f;
 		}
 		if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
@@ -910,12 +917,12 @@ HAL9000AI(PongData* p) {
 	else {
 		if(p->ball.yposition < (p->p2.ge.yposition + p->p2.ge.height/2) ) {
 			float f = p->p2.paddleSpeed*mult;
-			printf("HAL Moving UP %d\n", (int) f);
+			DEBUG2("HAL Moving UP", (int)f);
 			p->p2.ge.yposition -= (int) f;
 		}
 		else if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height)){
 			float f = p->p2.paddleSpeed*mult;
-			printf("HAL Moving DOWN %d\n", (int) f);
+			DEBUG2("HAL Moving DOWN", (int)f);
 			p->p2.ge.yposition += (int)f;
 		}
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
