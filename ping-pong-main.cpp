@@ -16,7 +16,7 @@ bool debugon = false;
 bool traceon = false;
 int  debuglevel = debug_c;
 
-#define VERSION "1.4"
+#define VERSION "1.2"
 
 /**
   ---------------------------------------------------------------------------

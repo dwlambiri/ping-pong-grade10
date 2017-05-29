@@ -1244,7 +1244,7 @@ InitGame() {
 
 	p->display.display = al_create_display(p->display.width, p->display.height);
 	p->bcolorarray[yellow_c] = al_map_rgb(255, 255, 0);
-	p->bcolorarray[blue_c] = al_map_rgb(0, 0, 255);
+	p->bcolorarray[blue_c] = al_map_rgb(200, 200, 255);
 	p->bcolorarray[white_c] = al_map_rgb(255, 255, 255);
 	p->bcolorarray[green_c] = al_map_rgb(0, 255, 0);
 

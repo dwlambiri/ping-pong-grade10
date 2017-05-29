@@ -24,9 +24,9 @@ player1sound = tennisserve.wav
 player2sound = tennisserve.wav
 
 # possible values yellow, blue, white, green
-colourscheme = green
+colourscheme = blue
 
-p1paddleSpeed = 20
+p1paddleSpeed = 5
 p2paddleSpeed = 20
 
 winSound = applause6.wav
