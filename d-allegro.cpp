@@ -552,7 +552,12 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 	al_flush_event_queue(p->eventqueue);
 	al_wait_for_event(p->eventqueue, &(p->ev));
 	if(ProcessKeyPress(p) == false) return false;
+	for (int i = 0; i < 2; i++ ) {
+		p->p1.keyPress[i] = false;
+		p->p2.keyPress[i] = false;
+	} //end-of-for
 	al_flush_event_queue(p->eventqueue);
+
 
 	return true;
 } // end-of-function DisplayTextAndWaitBegin

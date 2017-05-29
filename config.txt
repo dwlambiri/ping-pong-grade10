@@ -1,6 +1,6 @@
 # this is a comment
 # no '"' characters are allowed
-screenwidth = 2000
+screenwidth = 1000
 screenheight = 1000
 fontsize = 34
 
