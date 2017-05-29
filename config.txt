@@ -30,3 +30,4 @@ p1paddleSpeed = 20
 p2paddleSpeed = 20
 
 winSound = applause6.wav
+level = 20

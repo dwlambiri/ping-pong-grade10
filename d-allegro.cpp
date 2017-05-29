@@ -12,6 +12,8 @@
 #include <math.h>
 #include "d-allegro.h"
 
+typedef unsigned int uint;
+
 static const int MAXNAME = 200;
 static const int SCREEN_W = 1600;
 static const int SCREEN_H = 1200;
@@ -19,14 +21,15 @@ static const int SCREEN_H = 1200;
 static const float FRAMERATE = 60.0;
 static const float REFRESHTIME = 1.0/FRAMERATE;
 static const float PLAYERSPEED = 10.0;
-static const float COMPUTERSPEED = 10.0;
+//static const float COMPUTERSPEED = 10.0;
 //static const int SOMENUMBER = 11;
 static const int FONTSIZE = 24;
 static const int MAXSCORE = 10;
 static const int maxfonts_c = 3;
 static const int maxcolours_c = 4;
 static const int minballspeed_c = PLAYERSPEED;
-static const int LEVEL = 2*minballspeed_c;
+static const int maxballspeed_c = 2*minballspeed_c;
+static const uint maxlevel_c = 7;
 
 enum FONTSIZES { smallFont_c = 0, regularFont_c = 1, largeFont_c =2};
 enum COLOURS {yellow_c = 0, blue_c = 1, white_c = 2, green_c = 3};
@@ -41,7 +44,6 @@ static const char FONTNAME[] =  "pirulen.ttf";
 
 static const char halname[] = "HAL9000";
 
-typedef unsigned int uint;
 
 /**
   ---------------------------------------------------------------------------
@@ -119,8 +121,10 @@ typedef struct PongData {
 	Player* roundWinner;
 	int    fontsize;
 	uint maxscore;
+	uint level;
 	char fontFileName[MAXNAME];
 	char winSoundFile[MAXNAME];
+
 
 	ALLEGRO_EVENT ev;
 	ALLEGRO_EVENT_QUEUE *eventqueue;
@@ -143,10 +147,11 @@ static PongData pong = {
 		INITGE,
 		{SCREEN_W, SCREEN_H, NULL},
 		false,
-		LEVEL,
+		maxballspeed_c,
 		NULL,
 		FONTSIZE,
-		MAXSCORE
+		MAXSCORE,
+		1
 };
 
 //======= FUNCTION DECLARATIONS =====
@@ -175,6 +180,8 @@ static bool GameLoop(PongData* p);
 static void GameExit(PongData* p);
 static void PaletteBounceCalc(GameEntity* ball, Player* p, int);
 static int SignOfNumber(int value);
+static void DrawBitmapSection(GameEntity* g);
+static bool LoadPlayerBitmap(GameEntity* g, int level);
 
 //======= PRIVATE FUNCTIONS =========
 /**
@@ -191,6 +198,26 @@ SetBackgroundColor(ALLEGRO_COLOR color) {
 	// set to yellow
 	al_clear_to_color(color);
 } // end-of-function SetBackgroundColor
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 28, 2017
+   @mname   LoadPlayerBitmap
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static bool
+LoadPlayerBitmap(GameEntity* g, int level) {
+	if((g->bmap = al_load_bitmap(g->bitmapFileName)) == NULL ) {
+		printf("cannot load %s\n ", g->bitmapFileName);
+		return false;
+	}
+	g->width = al_get_bitmap_width(g->bmap);
+	g->height = (al_get_bitmap_height(g->bmap)*(maxlevel_c + 1 - level)) / maxlevel_c;
+	return true;
+} // end-of-function LoadPlayerBitmap
 
 
 
@@ -580,6 +607,22 @@ DrawBitmap(GameEntity* g) {
 /**
   ---------------------------------------------------------------------------
    @author  dwlambiri
+   @date    May 28, 2017
+   @mname   DrawBitmapSection
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static void
+DrawBitmapSection(GameEntity* g) {
+	al_draw_bitmap_region(g->bmap, 0, 0, g->width, g->height, g->xposition, g->yposition, 0);
+
+} // end-of-function DrawBitmapSection
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
    @date    May 22, 2017
    @mname   DrawObjects
    @details
@@ -590,8 +633,8 @@ static void
 DrawObjects(PongData* p) {
 
 	SetBackgroundColor(*(p->bcolor));
-	DrawBitmap(&(p->p1.ge));
-	DrawBitmap(&(p->p2.ge));
+	DrawBitmapSection(&(p->p1.ge));
+	DrawBitmapSection(&(p->p2.ge));
 	DrawBitmap(&(p->ball));
 } // end-of-function DrawObjects
 
@@ -1033,7 +1076,7 @@ CreateGameData(int argc, char **argv) {
 			//level
 			if(++param < argc) {
 				p->maxballspeed = atoi(argv[param]);
-				if (p->maxballspeed <= LEVEL) p->maxballspeed = LEVEL;
+				if (p->maxballspeed <= maxballspeed_c) p->maxballspeed = maxballspeed_c;
 			}
 		}
 		else if(strcmp(argv[param],"p1name")==0) {
@@ -1083,6 +1126,13 @@ CreateGameData(int argc, char **argv) {
 		else if(strcmp(argv[param],"p2paddleSpeed")==0) {
 			//player 2 paddle speed
 			if(++param < argc) p->p2.paddleSpeed = atoi(argv[param]);
+		}
+		else if(strcmp(argv[param],"level")==0) {
+			//level (controls the paddle size)
+			if(++param < argc){
+				p->level = atoi(argv[param]);
+				if(p->level>maxlevel_c) p->level = maxlevel_c;
+			}
 		}
 		else if(strcmp(argv[param],"colourscheme")==0) {
 			//player 2 bitmap file name
@@ -1178,8 +1228,8 @@ InitGame() {
 	}
 	else p->hal9000 = NULL;
 
-	if(LoadBitmap(&(p->p1.ge)) == false) return false;
-	if(LoadBitmap(&(p->p2.ge)) == false) return false;
+	if(LoadPlayerBitmap(&(p->p1.ge), p->level) == false) return false;
+	if(LoadPlayerBitmap(&(p->p2.ge), p-> level) == false) return false;
 	if(LoadBitmap(&(p->ball)) == false) return false;
 
 	LoadAudio(&(p->p1));
