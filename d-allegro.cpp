@@ -920,6 +920,7 @@ HAL9000AI(PongData* p) {
 	if(p->ball.xposition <= p->display.width/3) mult = 1.5;
 	if(p->ball.xposition <= p->display.width/4) mult = 2;
 	if(p->ball.xposition <= p->display.width/8) mult = 3;
+	if(p->ball.xposition < p->p2.ge.width) mult =  0;
 	if(p->ball.yspeed > 0) {
 		if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height/2)  ){
 			float f = p->p2.paddleSpeed*mult;
