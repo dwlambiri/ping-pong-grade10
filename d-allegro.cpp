@@ -542,7 +542,7 @@ DisplayTextAndWaitBegin(PongData* p) {
 	if (p->arcade == true) {
 		next = DrawText(p, (char*)"Arcade Mode (HAL is left)", p->display.width/2, p->display.height/2, regularFont_c);
 	} else {
-		next = DrawText(p, (char*)"Arcade Mode (Two Player Mode)", p->display.width/2, p->display.height/2, regularFont_c);
+		next = DrawText(p, (char*)"Two Player Mode", p->display.width/2, p->display.height/2, regularFont_c);
 	}
 	next = DrawText(p, (char*)"Press a key to begin", p->display.width/2, next, regularFont_c);
 
@@ -550,6 +550,7 @@ DisplayTextAndWaitBegin(PongData* p) {
 		DrawText(p, (char*)"You've got balls mate: Balls of Fury Mode activated!!", p->display.width/2, next, regularFont_c);
 	}
 	al_flip_display();
+	al_flush_event_queue(p->eventqueue);
 	al_wait_for_event(p->eventqueue, &(p->ev));
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
 		switch (p->ev.keyboard.keycode){
@@ -1252,6 +1253,7 @@ InitGame() {
 	p->fcolor = al_map_rgb(0, 0, 0);
 	p->timer = al_create_timer(REFRESHTIME);
 	p->eventqueue = al_create_event_queue();
+	if(al_is_event_queue_empty(p->eventqueue) == false) ERROR("Event queue not empty after creation");
 
 	al_register_event_source(p->eventqueue, al_get_keyboard_event_source());
 	al_register_event_source(p->eventqueue, al_get_display_event_source(p->display.display));
