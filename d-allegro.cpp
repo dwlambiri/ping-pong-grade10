@@ -155,6 +155,9 @@ static PongData pong = {
 		1
 };
 
+//======= EXTERNAL FUNCTION DECLARATION=====//
+bool recordResult(char* p);
+
 //======= FUNCTION DECLARATIONS =====
 static void SetBackgroundColor(ALLEGRO_COLOR color);
 static bool LoadBitmap(GameEntity* g);
@@ -583,6 +586,8 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 		sprintf(textBuffer, "Score: %s %d %s %d",p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 		DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
 		PlaySound(p->winsample);
+		sprintf(textBuffer, "[Mode: %s Level: %d %s %d %s %d]",(p->arcade?"Arcade":"Human"), p->level, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
+		recordResult(textBuffer);
 
 		p->p2.score = 0;
 		p->p1.score = 0;

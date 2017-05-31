@@ -1,4 +1,7 @@
 #!/bin/bash
-cat testconfig1.txt > testresults.txt; ./d-allegro -v -c d -l 2  testconfig1.txt >> testresults.txt
-cat testconfig1.txt >> testresults.txt; ./d-allegro -v -c -d -l 2 testconfig2.txt >> testresults.txt
-cat testconfig1.txt >> testresults.txt; ./d-allegro -v -c d -l 2  testconfig3.txt >> testresults.txt
+cat testconfig1.txt > testresults.txt; ./pong -v -d -l 1  -c testconfig1.txt >> testresults.txt
+cat testconfig1.txt >> testresults.txt; ./pong -v -d -l 1 -c testconfig2.txt >> testresults.txt
+cat testconfig1.txt >> testresults.txt; ./pong -v -d -l 1 -c testconfig3.txt >> testresults.txt
+grep Info testresults.txt
+grep Warn testresults.txt
+grep Error testresults.txt
