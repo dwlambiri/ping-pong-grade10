@@ -542,11 +542,15 @@ DisplayTextAndWaitBegin(PongData* p) {
 	int next = DrawText(p, (char*)"Welcome to Pong", p->display.width/2, p->display.height/4, largeFont_c);
 	al_flush_event_queue(p->eventqueue);
 	DrawText(p, (char*)"(c) dwlambiri 2017", p->display.width/2, next, smallFont_c);
+
 	if (p->arcade == true) {
 		next = DrawText(p, (char*)"Arcade Mode (HAL is left)", p->display.width/2, p->display.height/2, regularFont_c);
 	} else {
 		next = DrawText(p, (char*)"Two Player Mode", p->display.width/2, p->display.height/2, regularFont_c);
 	}
+	char buffer[100];
+	sprintf(buffer, "First to %d Wins!", p->maxscore);
+	next = DrawText(p, buffer, p->display.width/2, next, regularFont_c);
 	next = DrawText(p, (char*)"Press a key to begin", p->display.width/2, next, regularFont_c);
 
 	if(p->level == maxlevel_c) {
@@ -594,7 +598,10 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 	}
 	else {
 		sprintf(textBuffer, "%s Wins The Round!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
-		DrawText(p, textBuffer, p->display.width/2, p->display.height/4, regularFont_c);
+		int next = DrawText(p, textBuffer, p->display.width/2, p->display.height/4, regularFont_c);
+		char buffer[100];
+		sprintf(buffer, "First to %d Wins!", p->maxscore);
+		next = DrawText(p, buffer, p->display.width/2, next, regularFont_c);
 		DEBUG(" =======\n");
 	}
 
