@@ -5,6 +5,7 @@
  *      Author: dwlambiri
  */
 //This file is to eliminate the multiple include problem
+#include "pong-debug.cpp"
 #include "config-manager.cpp"
 #include "write-results.cpp"
 #include "d-allegro.cpp"

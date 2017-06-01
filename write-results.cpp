@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+#include <time.h>
 #include "pong-debug.h"
 
 static const char resultsFileName[] = "pong-results.txt";
@@ -29,7 +30,16 @@ recordResult(char* p) {
 		INFO("The file does not exist");
 		return false;
 	}
-	fprintf(fptr,"%s \n", p);
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer [80];
+
+	rawtime = time (NULL);
+	timeinfo = localtime (&rawtime);
+
+	strftime (buffer,80,"%F %T ",timeinfo);
+
+	fprintf(fptr,"%s %s \n", buffer, p);
 	fclose(fptr);
 	return true;
 } // end-of-function recordResult
