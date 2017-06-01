@@ -31,6 +31,7 @@ static const int maxcolours_c = 4;
 static const int minballspeed_c = PLAYERSPEED;
 static const int maxballspeed_c = 2*minballspeed_c;
 static const uint maxlevel_c = 7;
+static const uint maxdiff_c = 3;
 
 enum FONTSIZES { smallFont_c = 0, regularFont_c = 1, largeFont_c =2};
 enum COLOURS {yellow_c = 0, blue_c = 1, white_c = 2, green_c = 3};
@@ -154,6 +155,20 @@ static PongData pong = {
 		MAXSCORE,
 		1
 };
+//first array represents where in the field HAL will start to move
+static int cond1[] = {2, 2, 3, 4, 8};
+//This array is a multiplier to determine how much HAL should move
+//setting an entry to zero will prevent HAL from moving
+static float val1[] = {1, 1, 1 , 1, 1};
+
+
+static int cond2[] = {2, 2, 3, 4, 8};
+static float val2[] = {0, 1, 1.5 , 2, 3};
+
+static int* condp = cond1;
+static float* valptr = val1;
+
+
 
 //======= EXTERNAL FUNCTION DECLARATION=====//
 bool recordResult(char* p);
@@ -186,6 +201,7 @@ static void PaletteBounceCalc(GameEntity* ball, Player* p, int, int);
 static int SignOfNumber(int value);
 static void DrawBitmapSection(GameEntity* g);
 static bool LoadPlayerBitmap(GameEntity* g, int level);
+static void SetHalIntelligence(PongData* p);
 
 //======= PRIVATE FUNCTIONS =========
 /**
@@ -592,7 +608,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 		PlaySound(p->winsample);
 		sprintf(textBuffer, "[Mode: %s Level: %d %s %d %s %d]",(p->arcade?"Arcade":"Human"), p->level, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 		recordResult(textBuffer);
-
+		SetHalIntelligence(p);
 		p->p2.score = 0;
 		p->p1.score = 0;
 	}
@@ -910,6 +926,30 @@ minSpeed(int a, int b) {
 	else return b;
 } // end-of-function minSpeed
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    May 31, 2017
+   @mname   SetHalIntelligence
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static void
+SetHalIntelligence(PongData* p) {
+
+   if(p->p1.score > p->p2.score + maxdiff_c) {
+	   condp =  cond2;
+	   valptr = val2;
+   }
+   if(p->p1.score + maxdiff_c <  p->p2.score ) {
+	   condp =  cond1;
+	   valptr = val1;
+   }
+
+
+} // end-of-function SetHalIntelligence
+
 
 
 /**
@@ -928,11 +968,11 @@ HAL9000AI(PongData* p) {
     	//update only when ball moves towards the player
 	if(p->ball.xspeed > 0) return;
 	float mult = 1;
-	if(p->ball.xposition > p->display.width/2) mult = 0;
-	if(p->ball.xposition <= p->display.width/2) mult = 1;
-	if(p->ball.xposition <= p->display.width/3) mult = 1.5;
-	if(p->ball.xposition <= p->display.width/4) mult = 2;
-	if(p->ball.xposition <= p->display.width/8) mult = 3;
+	if(p->ball.xposition > p->display.width/condp[0]) mult = valptr[0];
+	if(p->ball.xposition <= p->display.width/condp[1]) mult = valptr[1];
+	if(p->ball.xposition <= p->display.width/condp[2]) mult = valptr[2];
+	if(p->ball.xposition <= p->display.width/condp[3]) mult = valptr[3];
+	if(p->ball.xposition <= p->display.width/condp[4]) mult = valptr[4];
 	if(p->ball.xposition < p->p2.ge.width) mult =  0;
 	if(p->ball.yspeed > 0) {
 		if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height/2)  ){
