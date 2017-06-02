@@ -1,16 +1,13 @@
 # this is a comment
 # no '"' characters are allowed
-
-#screenwidth sets the width of the screen, it is in pixels
-screenwidth = 2000
-
-screenheight = 1000
-fontsize = 34
+screenwidth = 2500
+screenheight = 500
+fontsize = 40
 
 p1name = DRitchie
 p2name = BKernigan
 
-maxscore = 5
+maxscore = 2
 maxballspeed     = 20
 arcade = true
 
@@ -29,12 +26,8 @@ player2sound = tennisserve.wav
 # possible values yellow, blue, white, green
 colourscheme = blue
 
-p1paddleSpeed = 15
+p1paddleSpeed = 20
 p2paddleSpeed = 20
 
 winSound = applause6.wav
-
-#level sets the paddle size, it is between 1 and 7
-#level 1 is a paddle of 7 blocks while 
-#level 7 is a paddle of 1 block
-level = 1
+level = 5

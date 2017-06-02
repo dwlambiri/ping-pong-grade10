@@ -15,7 +15,9 @@ extern int  debuglevel;
 
 char* printDebugTime();
 
-#ifdef DARIUS
+//#define PONGDEBUG
+
+#ifdef PONGDEBUG
 #define DEBUG(s) if(debugon && debuglevel == debug_c) printf("%s Debug@[%s:%d] %s\n", printDebugTime(),__FILE__, __LINE__,s)
 #define DEBUG2(s,d) if(debugon && debuglevel == debug_c) printf("%s Debug@[%s:%d] %s %d\n", printDebugTime(), __FILE__, __LINE__,s, d)
 #define INFO(s) if(debugon && debuglevel <= info_c) printf("%s Info@[%s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)

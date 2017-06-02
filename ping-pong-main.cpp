@@ -13,7 +13,7 @@
 
 //===== Public Data =====
 
-#define VERSION "1.2"
+#define VERSION "1.3"
 
 /**
   ---------------------------------------------------------------------------
@@ -26,13 +26,19 @@
  */
 static void
 Usage(void) {
-
+#ifdef PONGDEBUG
+	printf("Version %s [Debug Build %s %s]\n", VERSION, __DATE__, __TIME__);
+#else
+	printf("Version %s [Release Build %s %s]\n", VERSION, __DATE__, __TIME__);
+#endif
 	printf("Program Options\n");
 	printf("   -c configFileName - selects the config file, if no config file present, default is config.txt	\n");
 	printf("   -h - displays command line parameters \n");
+#ifdef PONGDEBUG
 	printf("   -d - enables debug mode \n");
 	printf("   -l debuglevel - sets the debug level (higher means less messages) \n");
 	printf("   -t - enables trace mode \n");
+#endif
 	printf("   -v - prints the version of the program and when it was built \n");
 
 
@@ -68,19 +74,25 @@ main(int argc, char **argv) {
 			Usage();
 			return 1;
 		}
+#ifdef PONGDEBUG
 		else if (strcmp(argv[param], "-d") == 0) {
 			debugon = true;
 		}
 		else if (strcmp(argv[param], "-t") == 0) {
 			traceon = true;
 		}
-		else if (strcmp(argv[param], "-v") == 0) {
-			printf("%s Version %s [Build %s %s]\n", argv[0], VERSION, __DATE__, __TIME__);
-		}
 		else if (strcmp(argv[param], "-l") == 0) {
 			if (++param < argc) {
 				debuglevel = atoi(argv[param]);
 			} //end-of-if(++param < argc)
+		}
+#endif
+		else if (strcmp(argv[param], "-v") == 0) {
+#ifdef PONGDEBUG
+			printf("%s Version %s [Debug Build %s %s]\n", argv[0], VERSION, __DATE__, __TIME__);
+#else
+			printf("%s Version %s [Release Build %s %s]\n", argv[0], VERSION, __DATE__, __TIME__);
+#endif
 		}
 	} //end-of-for
 

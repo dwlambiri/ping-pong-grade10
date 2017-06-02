@@ -1,4 +1,4 @@
-CCFLAGS =	-O2 -DDARIUS -g -Wall -I/usr/local/include -fmessage-length=0
+CCFLAGS =	-O2 -Wall -I/usr/local/include -fmessage-length=0
 CC = g++
 
 OBJS =		pong.o

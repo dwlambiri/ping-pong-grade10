@@ -31,10 +31,13 @@ static const int maxcolours_c = 4;
 static const int minballspeed_c = PLAYERSPEED;
 static const int maxballspeed_c = 2*minballspeed_c;
 static const uint maxlevel_c = 7;
-static const uint maxdiff_c = 3;
+static const uint maxdiff_c = 4;
+static const uint halarrays_c = 5;
+
 
 enum FONTSIZES { smallFont_c = 0, regularFont_c = 1, largeFont_c =2};
 enum COLOURS {yellow_c = 0, blue_c = 1, white_c = 2, green_c = 3};
+enum HALABILITY {novice_c = 0, intermediate_c, expert_c, pro_c};
 
 static const char P1FNAME[]  =  "player1.png";
 static const char P2FNAME[] =   "player2.png";
@@ -52,7 +55,8 @@ static const char halname[] = "HAL9000";
    @author     dwlambiri
    @date       May 22, 2017
    @name       GameEntity
-   @details
+   @details		The GameEntitiy structure is used for the information and
+	logic of game entities (the ball and the players).
 	\n
   ---------------------------------------------------------------------------
  */
@@ -67,19 +71,21 @@ typedef struct GameEntity {
 	char bitmapFileName[MAXNAME];
 }GameEntity;
 
-#define INITGE {0, 0, 0, 0, 0, 0, NULL, NULL }
+#define INITGE {0, 0, 0, 0, 0, 0, NULL, {0} }
 
 /**
   ---------------------------------------------------------------------------
    @author     dwlambiri
    @date       May 22, 2017
    @name       Player
-   @details
+   @details		contains all player information
 	\n
   ---------------------------------------------------------------------------
  */
 typedef struct Player {
 	uint score;
+	uint games;
+	uint totalpoints;
 	GameEntity ge;
 	char name[MAXNAME];
 	char audioFileName[MAXNAME];
@@ -88,13 +94,15 @@ typedef struct Player {
 	int paddleSpeed;
 }Player;
 
+#define INITPLAYER { 0, 0, 0, INITGE, {0}, {0}, NULL, {false, false}, 0}
 
 /**
   ---------------------------------------------------------------------------
    @author     dwlambiri
    @date       May 22, 2017
    @name       Display
-   @details
+   @details		Contains Display information, height width, and pointer to
+   the allegro display
 	\n
   ---------------------------------------------------------------------------
  */
@@ -103,6 +111,8 @@ typedef struct Display {
 	int height;
 	ALLEGRO_DISPLAY *display;
 } Display;
+
+#define INITDISPLAY {SCREEN_W, SCREEN_H, NULL}
 
 /**
   ---------------------------------------------------------------------------
@@ -144,29 +154,39 @@ typedef struct PongData {
 
 //declaring the main data variable of the game
 static PongData pong = {
-		{0, INITGE, "", "",NULL, false, false, PLAYERSPEED},
-		{0, INITGE, "", "", NULL, false, false, PLAYERSPEED},
+		INITPLAYER,
+		INITPLAYER,
 		INITGE,
-		{SCREEN_W, SCREEN_H, NULL},
+		INITDISPLAY,
 		false,
 		maxballspeed_c,
 		NULL,
 		FONTSIZE,
 		MAXSCORE,
-		1
+		1,
+		{0},
+		{0}
 };
-//first array represents where in the field HAL will start to move
-static int cond1[] = {2, 2, 3, 4, 8};
-//This array is a multiplier to determine how much HAL should move
-//setting an entry to zero will prevent HAL from moving
-static float val1[] = {1, 1, 1 , 1, 1};
+
+typedef struct AiValues {
+	//first array represents where in the field HAL will start to move
+	int cond[halarrays_c];
+	//This array is a multiplier to determine how much HAL should move
+	//setting an entry to zero will prevent HAL from moving
+	float val[halarrays_c];
+	int paddlespeed;
+}AiValues;
+
+AiValues halLevels[pro_c + 1] = {
+		{{2, 2, 3, 4, 8}, {0.25, 0.25, 0.25 , 0.25, 0.25}, PLAYERSPEED},
+		{{2, 2, 3, 4, 8}, {0.5, 0.5, 0.5 , 0.5, 0.5}, PLAYERSPEED},
+		{{2, 2, 3, 4, 8}, {1, 1, 1 , 1, 1}, PLAYERSPEED},
+		{{2, 2, 3, 4, 8}, {1, 1, 1.5 , 2, 3}, 40}
+};
 
 
-static int cond2[] = {2, 2, 3, 4, 8};
-static float val2[] = {0, 1, 1.5 , 2, 3};
-
-static int* condp = cond1;
-static float* valptr = val1;
+static int halAiLevel = expert_c;
+static AiValues* halCurrentPtr = &(halLevels[halAiLevel]);
 
 
 
@@ -193,7 +213,7 @@ static void PlaySound(ALLEGRO_SAMPLE* s);
 static bool PrintRoundWinner(PongData* p);
 static bool CheckPaletteCollision(PongData* p);
 static bool UpdateBallPosition(PongData* p);
-static int minSpeed(int a, int b);
+//static int minSpeed(int a, int b);
 static void HAL9000AI(PongData* p);
 static bool GameLoop(PongData* p);
 static void GameExit(PongData* p);
@@ -349,7 +369,10 @@ LoadFont(PongData* p, int size) {
    @date    May 22, 2017
    @mname   InitialPosition
    @details
-	  \n
+	  This function sets the players in the middle of the Y axis and provides
+	  the ball to one of the players
+	  If it is the first round, the player who has the ball is chosen at random.
+	  After a round win the round winner gets the serve.\n
   --------------------------------------------------------------------------
  */
 static void
@@ -420,7 +443,9 @@ InitialPosition(PongData* p) {
    @date    May 22, 2017
    @mname   ProcessKeyPress
    @details
-	  \n
+	  This function checks for keyboard input
+	  This function reacts to both keydown events and keyup events
+	  When a key is pushed down a boolean is set to keep the keep down as it is pressed\n
   --------------------------------------------------------------------------
  */
 static bool
@@ -481,7 +506,7 @@ ProcessKeyPress(PongData* p) {
    @date    May 27, 2017
    @mname   MovePaddles
    @details
-	  \n
+	  This function calculates the new positions of the paddles after the keys are pressed\n
   --------------------------------------------------------------------------
  */
 static void
@@ -519,7 +544,7 @@ MovePaddles(PongData* p) {
    @date    May 22, 2017
    @mname   DrawText
    @details
-	  \n
+	  Displays text on screen using allegro\n
   --------------------------------------------------------------------------
  */
 static int
@@ -548,7 +573,8 @@ DrawText(PongData* p, char* text, int x ,int y, int size) {
    @date    May 22, 2017
    @mname   DisplayTextAndWaitBegin
    @details
-	  Returns false if escape key is pressed\n
+	  Returns false if escape key is pressed
+	  This function displays the first screen that the user views in the game\n
   --------------------------------------------------------------------------
  */
 static bool
@@ -583,6 +609,7 @@ DisplayTextAndWaitBegin(PongData* p) {
 
 		}
 	}
+	DEBUG2("HAL skill: ", halAiLevel);
 	return true;
 } // end-of-function DisplayTextAndWaitBegin
 
@@ -592,7 +619,9 @@ DisplayTextAndWaitBegin(PongData* p) {
    @date    May 22, 2017
    @mname   DisplayTextAndWaitBegin
    @details
-	  Returns false if escape key is pressed\n
+	  Returns false if escape key is pressed
+	  This function displays a screen when a round or game is won
+	  The text for the two conditions will be different \n
   --------------------------------------------------------------------------
  */
 static bool
@@ -601,10 +630,18 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 	TRACE();
 	char textBuffer[255];
 	if(p->roundWinner->score == p->maxscore) {
+		p->roundWinner->games++;
 		sprintf(textBuffer, "%s Wins The Game!!",p->roundWinner->name);
 		int next = DrawText(p, textBuffer, p->display.width/2, p->display.height/4, largeFont_c);
 		sprintf(textBuffer, "Score: %s %d %s %d",p->p2.name, p->p2.score, p->p1.name, p->p1.score);
-		DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
+		next = DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
+
+		sprintf(textBuffer, "Games Won: %s %d %s %d",p->p2.name, p->p2.games, p->p1.name, p->p1.games);
+		next = DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
+
+		sprintf(textBuffer, "Total Points Won: %s %d %s %d",p->p2.name, p->p2.totalpoints, p->p1.name, p->p1.totalpoints);
+		next = DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
+
 		PlaySound(p->winsample);
 		sprintf(textBuffer, "[Mode: %s Level: %d %s %d %s %d]",(p->arcade?"Arcade":"Human"), p->level, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 		recordResult(textBuffer);
@@ -618,7 +655,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 		char buffer[100];
 		sprintf(buffer, "First to %d Wins!", p->maxscore);
 		next = DrawText(p, buffer, p->display.width/2, next, regularFont_c);
-		DEBUG(" =======\n");
+		//DEBUG(" =======\n");
 	}
 
 
@@ -659,7 +696,8 @@ DrawBitmap(GameEntity* g) {
    @date    May 28, 2017
    @mname   DrawBitmapSection
    @details
-	  \n
+	  Draws only a selected portion of a bitmap.
+	  It is used to change the length of the pallete depending on the game level.\n
   --------------------------------------------------------------------------
  */
 static void
@@ -676,7 +714,8 @@ DrawBitmapSection(GameEntity* g) {
    @date    May 22, 2017
    @mname   DrawObjects
    @details
-	  \n
+	  This function sets the background colour and draws the players and the ball
+	  Has to be called every time we want to refresh the display during gameplay\n
   --------------------------------------------------------------------------
  */
 static void
@@ -731,6 +770,7 @@ CheckSideCollitions(PongData* p) {
 	TRACE();
 	if ((p->ball.xposition >= (p->display.width-p->ball.width)) &&(p->ball.xspeed > 0)){
 		p->p2.score++;
+		p->p2.totalpoints++;
 		p->roundWinner = &(p->p2);
 		return true;
 
@@ -738,6 +778,7 @@ CheckSideCollitions(PongData* p) {
 	else if ((p->ball.xposition <= 0) && (p->ball.xspeed < 0)){
 		TRACE();
 		p->p1.score++;
+		p->p1.totalpoints++;
 		p->roundWinner = &(p->p1);
 		return true;
 	}
@@ -768,7 +809,10 @@ PlaySound(ALLEGRO_SAMPLE* s) {
    @date    May 22, 2017
    @mname   PrintRoundWinner
    @details
-	  \n
+	  When the round ends, we need to stop the timers from firing unwanted events
+	  We do that at the beginning of the function
+	  Prints a message and play a sound
+	  Then we wait for user input to restart the game\n
   --------------------------------------------------------------------------
  */
 static bool
@@ -821,7 +865,11 @@ SignOfNumber(int value) {
    @date    May 28, 2017
    @mname   PaletteBounceCalc
    @details
-	  \n
+	  This function changes the direction of the ball after a collision with the
+	  pallete.
+	  The pallete height is divided into vone_c zones
+	  Depending on which zone makes contact the ball will react in a different way
+	  This is to increase the unpredictability of the game and make it more fun and challenging\n
   --------------------------------------------------------------------------
  */
 static void
@@ -860,7 +908,14 @@ PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed, int level) {
    @date    May 22, 2017
    @mname   CheckPaletteCollision
    @details
-	  true if there is a collision false otherwise\n
+	  true if there is a collision false otherwise
+	  This function checks if the ball touches the play edge of the pallet
+	  Player one is the left edge
+	  Player two it is the right edge
+
+	  We are using inequalities because we update the positions in non-multiples of the field
+	  length and width because of that it is possible that the ball and pallete may slightly superpose
+	  That condition is a valid collision \n
   --------------------------------------------------------------------------
  */
 static bool
@@ -893,7 +948,12 @@ CheckPaletteCollision(PongData* p) {
    @date    May 22, 2017
    @mname   UpdateBallPosition
    @details
-	  return true if round is finished\n
+	  return true if round is finished
+	  This function checks if there is a collision between the ball and the pallet
+	  If that is not the case, than it checks if there is a collision with the left and right field edges
+	  This signifies a round win
+	  If none of the conditions above happen, we need to check a collision with the top and bottom
+	  edges of the field\n
   --------------------------------------------------------------------------
  */
 static bool
@@ -919,12 +979,12 @@ UpdateBallPosition(PongData* p) {
 	  \n
   --------------------------------------------------------------------------
  */
-static int
-minSpeed(int a, int b) {
-
-	if(a < b) return a;
-	else return b;
-} // end-of-function minSpeed
+//static int
+//minSpeed(int a, int b) {
+//
+//	if(a < b) return a;
+//	else return b;
+//} // end-of-function minSpeed
 
 /**
   ---------------------------------------------------------------------------
@@ -932,21 +992,27 @@ minSpeed(int a, int b) {
    @date    May 31, 2017
    @mname   SetHalIntelligence
    @details
+	  Hal has several proficiency settings
+	  This function sets Hal to a proficiency level based on the game score
+	  What I am trying to achieve is a tighter game to increase user interest
 	  \n
   --------------------------------------------------------------------------
  */
 static void
 SetHalIntelligence(PongData* p) {
 
-   if(p->p1.score > p->p2.score + maxdiff_c) {
-	   condp =  cond2;
-	   valptr = val2;
+   TRACE();
+   if((p->p1.totalpoints >= p->p2.totalpoints + maxdiff_c) || (p->p2.score == 0)) {
+	   if(halAiLevel == pro_c) return;
+	   halCurrentPtr = &(halLevels[++halAiLevel]);
+	   p->p2.paddleSpeed = halCurrentPtr->paddlespeed;
    }
-   if(p->p1.score + maxdiff_c <  p->p2.score ) {
-	   condp =  cond1;
-	   valptr = val1;
+   if((p->p1.totalpoints + maxdiff_c <=  p->p2.totalpoints) || (p->p1.score == 0)) {
+	   if(halAiLevel == novice_c) return;
+	   halCurrentPtr = &(halLevels[--halAiLevel]);
+	   p->p2.paddleSpeed = halCurrentPtr->paddlespeed;
    }
-
+   DEBUG2("HAL skill: ", halAiLevel);
 
 } // end-of-function SetHalIntelligence
 
@@ -958,7 +1024,9 @@ SetHalIntelligence(PongData* p) {
    @date    May 22, 2017
    @mname   HAL9000AI
    @details
-	  \n
+	  This is the Hal AI function
+	  It checks the ball position relative to the position on the field and then
+	  decides the speed of the movement as well as direction.\n
   --------------------------------------------------------------------------
  */
 static void
@@ -968,21 +1036,24 @@ HAL9000AI(PongData* p) {
     	//update only when ball moves towards the player
 	if(p->ball.xspeed > 0) return;
 	float mult = 1;
-	if(p->ball.xposition > p->display.width/condp[0]) mult = valptr[0];
-	if(p->ball.xposition <= p->display.width/condp[1]) mult = valptr[1];
-	if(p->ball.xposition <= p->display.width/condp[2]) mult = valptr[2];
-	if(p->ball.xposition <= p->display.width/condp[3]) mult = valptr[3];
-	if(p->ball.xposition <= p->display.width/condp[4]) mult = valptr[4];
+	if(p->ball.xposition > p->display.width/halCurrentPtr->cond[0]) mult = halCurrentPtr->val[0];
+	if(p->ball.xposition <= p->display.width/halCurrentPtr->cond[1]) mult = halCurrentPtr->val[1];
+	if(p->ball.xposition <= p->display.width/halCurrentPtr->cond[2]) mult = halCurrentPtr->val[2];
+	if(p->ball.xposition <= p->display.width/halCurrentPtr->cond[3]) mult = halCurrentPtr->val[3];
+	if(p->ball.xposition <= p->display.width/halCurrentPtr->cond[4]) mult = halCurrentPtr->val[4];
 	if(p->ball.xposition < p->p2.ge.width) mult =  0;
+	//We decide to move up based on the ball Y speed
+	// if Y speed > 0 it means the ball is moving downward
+	//If the Y speed < 0 it means the ball is moving upwards
 	if(p->ball.yspeed > 0) {
 		if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height/2)  ){
 			float f = p->p2.paddleSpeed*mult;
-			DEBUG2("HAL Moving DOWN", (int)f);
+			//DEBUG2("HAL Moving DOWN", (int)f);
 			p->p2.ge.yposition += (int)f;
 		}
 		else if(p->ball.yposition < p->p2.ge.yposition){
 			float f = p->p2.paddleSpeed*mult;
-			DEBUG2("HAL Moving UP", (int)f);
+			//DEBUG2("HAL Moving UP", (int)f);
 			p->p2.ge.yposition -= (int) f;
 		}
 		if(p->p2.ge.yposition >= (p->display.height - p->p2.ge.height))
@@ -991,12 +1062,12 @@ HAL9000AI(PongData* p) {
 	else {
 		if(p->ball.yposition < (p->p2.ge.yposition + p->p2.ge.height/2) ) {
 			float f = p->p2.paddleSpeed*mult;
-			DEBUG2("HAL Moving UP", (int)f);
+			//DEBUG2("HAL Moving UP", (int)f);
 			p->p2.ge.yposition -= (int) f;
 		}
 		else if(p->ball.yposition > (p->p2.ge.yposition + p->p2.ge.height)){
 			float f = p->p2.paddleSpeed*mult;
-			DEBUG2("HAL Moving DOWN", (int)f);
+			//DEBUG2("HAL Moving DOWN", (int)f);
 			p->p2.ge.yposition += (int)f;
 		}
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
@@ -1011,7 +1082,10 @@ HAL9000AI(PongData* p) {
    @date    May 22, 2017
    @mname   GameLoop
    @details
-	  \n
+	  This function contains the game loop.
+	  The loop processes events from p->eventqueue.
+	  Events come from the two game timers (one is for screen refresh,
+	  the other is for HAL AI) as well as keyboard and mouse events.\n
   --------------------------------------------------------------------------
  */
 static bool
@@ -1034,6 +1108,9 @@ GameLoop(PongData* p) {
 		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
 					return false;
 		}
+		//If the round is won we need to stop the game for 1 second
+		//We do this by counting timer events without processing them which in effect
+		//skips frames
 		if(roundwin == true) {
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 					   p->ev.timer.source == p->timer) {
@@ -1051,23 +1128,28 @@ GameLoop(PongData* p) {
 			else continue;
 		}
 		else {
+			//check if escape key has been pressesd if not then proceed to update the game screen
 			if(ProcessKeyPress(p) == false) {
 				//user has ended game
 				return false;
 			}
+			//Calculates next position of the paddles based on the key imputs read above
 			MovePaddles(p);
 			if(p->arcade == true &&
 			   p->ev.type == ALLEGRO_EVENT_TIMER &&
 			   p->ev.timer.source == p->hal9000) {
+				//if we are in arcade mode and the timer event belongs to the hal timer then
+				// we have to run hal's ai logic.
 				HAL9000AI(p);
 			}
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 			   p->ev.timer.source == p->timer) {
+				//If this is a screen update timer event then we have to redraw the screen
+				//we have to update the ball position and then draw all objects (players and ball)
 				roundwin = UpdateBallPosition(p);
 				DrawObjects(p);
+				//we need to flip the display, not enirely sure why however this is how allegro tutorial recomends
 				al_flip_display();
-				if(roundwin == true) {
-				}
 			}
 		}
 	}
@@ -1082,6 +1164,7 @@ GameLoop(PongData* p) {
    @date    May 22, 2017
    @mname   GameExit
    @details
+	  This function is called when the game terminates and it destroys all allegro resources
 	  \n
   --------------------------------------------------------------------------
  */
@@ -1108,7 +1191,7 @@ GameExit(PongData* p) {
 
 
 //======== PUBLIC FUNCITONS ===========
-
+//The functions below are called from the main function
 
 
 /**
@@ -1117,7 +1200,10 @@ GameExit(PongData* p) {
    @date    May 25, 2017
    @mname   CreateGameData
    @details
-	  \n
+	  This function gets the game config parameters as read from the config file
+	  In the same format as the parameters passes to the main file
+	  argv is an array of character pointers and argc is the is number of entries in the array
+	  Processing is done in the same style as the main command line arguments\n
   --------------------------------------------------------------------------
  */
 bool
@@ -1212,7 +1298,13 @@ CreateGameData(int argc, char **argv) {
 		}
 		else if(strcmp(argv[param],"p2paddleSpeed")==0) {
 			//player 2 paddle speed
-			if(++param < argc) p->p2.paddleSpeed = atoi(argv[param]);
+			if(++param < argc){
+				p->p2.paddleSpeed = atoi(argv[param]);
+				halLevels[0].paddlespeed = p->p2.paddleSpeed/2;
+				halLevels[1].paddlespeed = p->p2.paddleSpeed;
+				halLevels[2].paddlespeed = (3*p->p2.paddleSpeed)/2;
+				halLevels[3].paddlespeed = p->p2.paddleSpeed*2;
+			}
 		}
 		else if(strcmp(argv[param],"level")==0) {
 			//level (controls the paddle size)
@@ -1256,7 +1348,10 @@ CreateGameData(int argc, char **argv) {
    @date    May 22, 2017
    @mname   InitGame
    @details
-	  returns 1 if init ok, 0 otherwise\n
+	  returns 1 if init ok, 0 otherwise
+	  This function does the following:
+	  1. Initialises all allegro resources
+	  2. Loads all game resources (fonts, bitmaps, sounds)
   --------------------------------------------------------------------------
  */
 bool
@@ -1311,7 +1406,7 @@ InitGame() {
 	al_register_event_source(p->eventqueue, al_get_display_event_source(p->display.display));
 	al_register_event_source(p->eventqueue, al_get_timer_event_source(p->timer));
 	if(p->arcade == true) {
-		printf("Arcade Mode Detected\n");
+		INFO("Arcade Mode Detected\n");
 		p->hal9000 = al_create_timer(1.0/(float) p->p2.paddleSpeed);
 		al_register_event_source(p->eventqueue, al_get_timer_event_source(p->hal9000));
 	}
@@ -1338,7 +1433,9 @@ InitGame() {
    @date    May 25, 2017
    @mname   GameRun
    @details
-	  \n
+	  This is the function called from the main function
+	  1. Displays the initial screen
+	  2. Calls the game loop
   --------------------------------------------------------------------------
  */
 void
