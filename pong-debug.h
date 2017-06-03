@@ -29,7 +29,7 @@ void  functionEnter();
 void  functionExit();
 char* printCallDepth();
 
-#define PONGDEBUG
+//#define PONGDEBUG
 
 #ifdef PONGDEBUG
 #define DEBUG(s) if(debugon && debuglevel == debug_c) printf("Debug[%s %s:%4d] %s\n", printDebugTime(),__FILE__, __LINE__,s)
