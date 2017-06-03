@@ -26,16 +26,16 @@ extern int  debuglevel;
 
 char* printDebugTime();
 
-//#define PONGDEBUG
+#define PONGDEBUG
 
 #ifdef PONGDEBUG
-#define DEBUG(s) if(debugon && debuglevel == debug_c) printf("%s Debug@[%s:%d] %s\n", printDebugTime(),__FILE__, __LINE__,s)
-#define DEBUG2(s,d) if(debugon && debuglevel == debug_c) printf("%s Debug@[%s:%d] %s %d\n", printDebugTime(), __FILE__, __LINE__,s, d)
-#define INFO(s) if(debugon && debuglevel <= info_c) printf("%s Info@[%s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
-#define WARN(s) if(debugon && debuglevel <= warn_c) printf("%s Warn@[%s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
-#define ERROR(s) if(debugon && debuglevel <= error_c) printf("%s Error@[%s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
+#define DEBUG(s) if(debugon && debuglevel == debug_c) printf("Debug[%s %s:%d] %s\n", printDebugTime(),__FILE__, __LINE__,s)
+#define DEBUG2(s,d) if(debugon && debuglevel == debug_c) printf("Debug[%s %s:%d] %s %d\n", printDebugTime(), __FILE__, __LINE__,s, d)
+#define INFO(s) if(debugon && debuglevel <= info_c) printf("Info[%s %s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
+#define WARN(s) if(debugon && debuglevel <= warn_c) printf("Warn[%s %s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
+#define ERROR(s) if(debugon && debuglevel <= error_c) printf("Error[%s %s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
 
-#define TRACE() if(traceon) printf("%s Trace@[%s:%d:%s]\n", printDebugTime(), __FILE__, __LINE__, __PRETTY_FUNCTION__)
+#define TRACE() if(traceon) printf("Trace<%s: %s:%d> %s;\n", printDebugTime(), __FILE__, __LINE__, __PRETTY_FUNCTION__)
 #else
 #define DEBUG(s)
 #define DEBUG2(s,d)
