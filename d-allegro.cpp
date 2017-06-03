@@ -278,9 +278,11 @@ static bool PauseGame(PongData* p);
  */
 static void
 SetBackgroundColor(ALLEGRO_COLOR color) {
+	FENTRY();
 	// set to color
 	TRACE();
 	al_clear_to_color(color);
+	FEXIT();
 } // end-of-function SetBackgroundColor
 
 /**
@@ -294,13 +296,16 @@ SetBackgroundColor(ALLEGRO_COLOR color) {
  */
 static bool
 LoadPlayerBitmap(GameEntity* g, int level) {
+	FENTRY();
 	TRACE();
 	if((g->bmap = al_load_bitmap(g->bitmapFileName)) == NULL ) {
 		printf("cannot load %s\n ", g->bitmapFileName);
+		FEXIT();
 		return false;
 	}
 	g->width = al_get_bitmap_width(g->bmap);
 	g->height = (al_get_bitmap_height(g->bmap)*(maxlevel_c + 1 - level)) / maxlevel_c;
+	FEXIT();
 	return true;
 } // end-of-function LoadPlayerBitmap
 
@@ -317,14 +322,17 @@ LoadPlayerBitmap(GameEntity* g, int level) {
  */
 static bool
 LoadBitmap(GameEntity* g) {
+	FENTRY();
 	TRACE();
 	if((g->bmap = al_load_bitmap(g->bitmapFileName)) == NULL ) {
 		printf("cannot load %s\n ", g->bitmapFileName);
+		FEXIT();
 		return false;
 	}
 	g->width = al_get_bitmap_width(g->bmap);
 	g->height = al_get_bitmap_height(g->bmap);
 
+	FEXIT();
 	return true;
 } // end-of-function LoadBitmap
 
@@ -340,12 +348,15 @@ LoadBitmap(GameEntity* g) {
  */
 static bool
 LoadAudio(Player* p) {
+	FENTRY();
 	TRACE();
 	p->sample = al_load_sample( p->audioFileName );
 	if (p->sample == NULL) {
 	   printf( "Audio clip sample %s not loaded!\n", p->audioFileName );
+	   FEXIT();
 	   return false;
 	}
+	FEXIT();
 	return true;
 } // end-of-function LoadAudio
 
@@ -360,12 +371,15 @@ LoadAudio(Player* p) {
  */
 static bool
 LoadWinAudio(PongData* p ) {
+	FENTRY();
 	TRACE();
 	p->winsample = al_load_sample( p->winSoundFile );
 	if (p->winsample == NULL) {
 	   printf( "Audio clip sample %s not loaded!\n", p->winSoundFile );
+	   FEXIT();
 	   return false;
 	}
+	FEXIT();
 	return true;
 } // end-of-function LoadWinAudio
 
@@ -383,6 +397,7 @@ LoadWinAudio(PongData* p ) {
 static bool
 LoadFont(PongData* p, int size) {
 
+	FENTRY();
 	TRACE();
 	int fontSize = p->fontsize;
 	switch (size) {
@@ -400,8 +415,10 @@ LoadFont(PongData* p, int size) {
 	//error message if the font file is NULL
 	if (p->font[size] == NULL){
 	      printf("Could not load %s.\n", p->fontFileName);
+	      FEXIT();
 	      return false;
 	}
+	FEXIT();
 	return true;
 } // end-of-function LoadFont
 
@@ -421,6 +438,7 @@ LoadFont(PongData* p, int size) {
 static void
 InitialPosition(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	p->ball.xspeed =  minballspeed_c + rand() % (p->maxballspeed -minballspeed_c);
 	if (p->roundWinner) {
@@ -474,6 +492,7 @@ InitialPosition(PongData* p) {
 		p->startsample = p->p1.sample;
 	}
 
+	FEXIT();
 
 } // end-of-function InitialPosition
 
@@ -489,7 +508,9 @@ InitialPosition(PongData* p) {
  */
 static bool
 PauseGame(PongData* p) {
+
 	//To pause the game we need to stop the timers
+	FENTRY();
 	TRACE();
 	StopTimers(p);
 	while(true) {
@@ -503,6 +524,7 @@ PauseGame(PongData* p) {
 			switch (p->ev.keyboard.keycode){
 			case ALLEGRO_KEY_ESCAPE:
 				//exit game
+				FEXIT();
 				return false;
 			case ALLEGRO_KEY_P:
 				//P was pressed again
@@ -510,14 +532,17 @@ PauseGame(PongData* p) {
 				//and we want to start the timers
 				al_flush_event_queue(p->eventqueue);
 				StartTimers(p);
+				FEXIT();
 				return true;
 			}
 		}
 		//close the display with the mouse
 		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+			FEXIT();
 			return false;
 		}
 	}
+	FEXIT();
 	return true;
 
 } // end-of-function PauseGame
@@ -538,6 +563,7 @@ PauseGame(PongData* p) {
 static bool
 ProcessKeyPress(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
 		switch (p->ev.keyboard.keycode){
@@ -560,10 +586,14 @@ ProcessKeyPress(PongData* p) {
 			p->p1.keyPress[0] = false;
 			break;
 		case ALLEGRO_KEY_P:
-			if(PauseGame(p) ==false ) return false;
+			if(PauseGame(p) ==false ) {
+				FEXIT();
+				return false;
+			}
 			break;
 		case ALLEGRO_KEY_ESCAPE:
 			//exit game
+			FEXIT();
 			return false;
 		}
 	}
@@ -583,11 +613,14 @@ ProcessKeyPress(PongData* p) {
 			break;
 		case ALLEGRO_KEY_ESCAPE:
 			//exit game
+			FEXIT();
 			return false;
 		}
 	} else if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+		FEXIT();
 		return false;
 	}
+	FEXIT();
 	return true;
 } // end-of-function ProcessKeyPress
 
@@ -603,6 +636,7 @@ ProcessKeyPress(PongData* p) {
 bool
 PressAnyKeyToBegin(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	al_flush_event_queue(p->eventqueue);
 
@@ -614,6 +648,8 @@ PressAnyKeyToBegin(PongData* p) {
 		//can be something else as the event queue
 		//has other sources
 		if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
+			FEXIT();
+			//exits either way
 			switch (p->ev.keyboard.keycode){
 			case ALLEGRO_KEY_ESCAPE:
 				//exit game
@@ -623,9 +659,11 @@ PressAnyKeyToBegin(PongData* p) {
 			}
 		}
 		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+			FEXIT();
 			return false;
 		}
 	}
+	FEXIT();
 	return true;
 } // end-of-function PressAnyKeyToBegin
 
@@ -643,6 +681,7 @@ PressAnyKeyToBegin(PongData* p) {
 static void
 MovePaddles(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	if(p->p1.keyPress[0] ==true){
 		p->p1.ge.yposition -= p->p1.paddleSpeed;
@@ -665,6 +704,7 @@ MovePaddles(PongData* p) {
 			p->p2.ge.yposition = (p->display.height - p->p2.ge.height);
 	} //end-of-if(p->p2.keyPress[1] == true)
 
+	FEXIT();
 } // end-of-function MovePaddles
 
 
@@ -682,6 +722,7 @@ MovePaddles(PongData* p) {
  */
 static int
 DrawText(PongData* p, char* text, int x ,int y, int size) {
+	FENTRY();
 	TRACE();
     al_draw_text(p->font[size], p->fcolor, x, y,ALLEGRO_ALIGN_CENTRE, text);
     int fsize = p->fontsize;
@@ -695,6 +736,7 @@ DrawText(PongData* p, char* text, int x ,int y, int size) {
 		default:
 			break;
 	} //end-switch(size)
+    FEXIT();
     return y+fsize+10;
 } // end-of-function DrawText
 
@@ -713,6 +755,7 @@ DrawText(PongData* p, char* text, int x ,int y, int size) {
 static bool
 DisplayTextAndWaitBegin(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	int next = DrawText(p, (char*)"Welcome to Pong", p->display.width/2, p->display.height/4, largeFont_c);
 	al_flush_event_queue(p->eventqueue);
@@ -733,8 +776,12 @@ DisplayTextAndWaitBegin(PongData* p) {
 	}
 	al_flip_display();
 
-	if(PressAnyKeyToBegin(p) == false) return false;
+	if(PressAnyKeyToBegin(p) == false) {
+		FEXIT();
+		return false;
+	}
 	DEBUG2("HAL skill: ", halAiLevel);
+	FEXIT();
 	return true;
 } // end-of-function DisplayTextAndWaitBegin
 
@@ -754,6 +801,7 @@ DisplayTextAndWaitBegin(PongData* p) {
 static bool
 DisplayTextAndWaitRoundWin(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	char textBuffer[255];
 	if(p->roundWinner->score == p->maxscore) {
@@ -789,7 +837,10 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 	DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, p->display.height/2, regularFont_c);
 	al_flip_display();
 
-	if(PressAnyKeyToBegin(p) == false) return false;
+	if(PressAnyKeyToBegin(p) == false) {
+		FEXIT();
+		return false;
+	}
 
 	for (int i = 0; i < 2; i++ ) {
 		p->p1.keyPress[i] = false;
@@ -797,7 +848,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 	} //end-of-for
 	al_flush_event_queue(p->eventqueue);
 
-
+	FEXIT();
 	return true;
 } // end-of-function DisplayTextAndWaitBegin
 
@@ -812,8 +863,10 @@ DisplayTextAndWaitRoundWin(PongData* p) {
  */
 static void
 DrawBitmap(GameEntity* g) {
+	FENTRY();
 	TRACE();
 	al_draw_bitmap(g->bmap, g->xposition, g->yposition, 0);
+	FEXIT();
 
 } // end-of-function DrawBitmap
 
@@ -829,9 +882,10 @@ DrawBitmap(GameEntity* g) {
  */
 static void
 DrawBitmapSection(GameEntity* g) {
+	FENTRY();
 	TRACE();
 	al_draw_bitmap_region(g->bmap, 0, 0, g->width, g->height, g->xposition, g->yposition, 0);
-
+	FEXIT();
 } // end-of-function DrawBitmapSection
 
 
@@ -848,11 +902,13 @@ DrawBitmapSection(GameEntity* g) {
 static void
 DrawObjects(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	SetBackgroundColor(*(p->bcolor));
 	DrawBitmapSection(&(p->p1.ge));
 	DrawBitmapSection(&(p->p2.ge));
 	DrawBitmap(&(p->ball));
+	FEXIT();
 } // end-of-function DrawObjects
 
 /**
@@ -867,18 +923,22 @@ DrawObjects(PongData* p) {
 static bool
 CheckTopBottomCollision(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	if (p->ball.yposition > (p->display.height-p->ball.height)) {
 		p->ball.yposition = p->display.height-p->ball.height;
 		if(p->ball.yspeed > 0) p->ball.yspeed *= -1;
+		FEXIT();
 		return true;
 	}
 	else if(p->ball.yposition < 0 )	{
 		p->ball.yposition = 0;
 		if(p->ball.yspeed < 0 ) p->ball.yspeed *= -1;
+		FEXIT();
 		return true;
 	}
 
+	FEXIT();
 	return false;
 } // end-of-function CheckTopBottomCollision
 
@@ -894,11 +954,13 @@ CheckTopBottomCollision(PongData* p) {
 static bool
 CheckSideCollitions(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	if ((p->ball.xposition >= (p->display.width-p->ball.width)) &&(p->ball.xspeed > 0)){
 		p->p2.score++;
 		p->p2.totalpoints++;
 		p->roundWinner = &(p->p2);
+		FEXIT();
 		return true;
 
 	}
@@ -907,8 +969,10 @@ CheckSideCollitions(PongData* p) {
 		p->p1.score++;
 		p->p1.totalpoints++;
 		p->roundWinner = &(p->p1);
+		FEXIT();
 		return true;
 	}
+	FEXIT();
 	return false;
 } // end-of-function CheckSideCollitions
 
@@ -924,8 +988,10 @@ CheckSideCollitions(PongData* p) {
  */
 static void
 PlaySound(ALLEGRO_SAMPLE* s) {
+	FENTRY();
 	TRACE();
 	if(s) al_play_sample(s, 1.0, 0.0,1.0,ALLEGRO_PLAYMODE_ONCE,NULL);
+	FEXIT();
 } // end-of-function PlaySound
 
 /**
@@ -940,9 +1006,11 @@ PlaySound(ALLEGRO_SAMPLE* s) {
 static void
 StopTimers(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	al_stop_timer(p->timer);
 	if(p->arcade) al_stop_timer(p->hal9000);
+	FEXIT();
 
 } // end-of-function StopTimers
 
@@ -957,9 +1025,12 @@ StopTimers(PongData* p) {
  */
 static void
 StartTimers(PongData* p) {
+
+	FENTRY();
 	TRACE();
 	al_start_timer(p->timer);
 	if(p->arcade) al_start_timer(p->hal9000);
+	FEXIT();
 } // end-of-function StartTimers
 
 
@@ -979,19 +1050,21 @@ StartTimers(PongData* p) {
 static bool
 PrintRoundWinner(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	StopTimers(p);
 	InitialPosition(p);
 	DrawObjects(p);
 
 	if(DisplayTextAndWaitRoundWin(p) == false) {
+		FEXIT();
 		return false;
 	}
 	else {
 		StartTimers(p);
 		PlaySound(p->startsample);
 	}
-
+	FEXIT();
 	return true;
 } // end-of-function PrintRoundWinner
 
@@ -1032,6 +1105,8 @@ SignOfNumber(int value) {
  */
 static void
 PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed, int level) {
+
+	FENTRY();
 	TRACE();
 	int newxspeed = abs(ball->xspeed) + (rand()% (minballspeed_c / 2));
 	if (newxspeed > maxballspeed) newxspeed = maxballspeed;
@@ -1053,9 +1128,9 @@ PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed, int level) {
 
 		ball->yspeed += 5*(zonenum - zones_c / 2);
 	}
+
 	PlaySound(p->sample);
-
-
+	FEXIT();
 
 } // end-of-function PaletteBounceCalc
 
@@ -1068,8 +1143,8 @@ PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed, int level) {
    @details
 	  true if there is a collision false otherwise
 	  This function checks if the ball touches the play edge of the pallet
-	  Player one is the left edge
-	  Player two it is the right edge
+	  Player one is the *right* edge
+	  Player two it is the *left* edge. HAL is player2 when in arcade mode
 
 	  We are using inequalities because we update the positions in non-multiples of the field
 	  length and width because of that it is possible that the ball and pallete may slightly superpose
@@ -1078,12 +1153,15 @@ PaletteBounceCalc(GameEntity* ball, Player* p, int maxballspeed, int level) {
  */
 static bool
 CheckPaletteCollision(PongData* p) {
+	FENTRY();
 	TRACE();
 	if (    p->ball.xposition+ p->ball.width>= p->p1.ge.xposition &&
 			p->ball.yposition + p->ball.height >= p->p1.ge.yposition  &&
 			p->ball.yposition  <= p->p1.ge.yposition + p->p1.ge.height){
 
+			p->ball.xposition = p->p1.ge.xposition - p->p1.ge.width;
 			PaletteBounceCalc(&(p->ball), &(p->p1), p->maxballspeed, p->level);
+			FEXIT();
 			return true;
 	}
 
@@ -1091,10 +1169,12 @@ CheckPaletteCollision(PongData* p) {
 			p->ball.yposition + p->ball.height >= p->p2.ge.yposition  &&
 			p->ball.yposition  <= p->p2.ge.yposition + p->p2.ge.height){
 
+			p->ball.xposition = p->p2.ge.xposition + p->p2.ge.width;
 		    PaletteBounceCalc(&(p->ball), &(p->p2), p->maxballspeed, p->level);
-			return true;
+			FEXIT();
+		    return true;
 	}
-
+	FEXIT();
 	return false;
 } // end-of-function CheckPaletteCollision
 
@@ -1116,15 +1196,19 @@ CheckPaletteCollision(PongData* p) {
  */
 static bool
 UpdateBallPosition(PongData* p) {
+	FENTRY();
 	TRACE();
 	p->ball.xposition = p->ball.xposition + p->ball.xspeed;
 	p->ball.yposition = p->ball.yposition + p->ball.yspeed;
 
 	if(CheckPaletteCollision(p) == false) {
-		if(CheckSideCollitions(p) == true) return true;
+		if(CheckSideCollitions(p) == true) {
+			FEXIT();
+			return true;
+		}
 	}
 	CheckTopBottomCollision(p);
-
+	FEXIT();
 	return false;
 } // end-of-function UpdateBallPosition
 
@@ -1158,20 +1242,28 @@ UpdateBallPosition(PongData* p) {
  */
 static void
 SetHalIntelligence(PongData* p) {
-
+   FENTRY();
    TRACE();
    if((p->p1.totalpoints >= p->p2.totalpoints + maxdiff_c) || (p->p2.score == 0)) {
-	   if(halAiLevel == pro_c) return;
+	   if(halAiLevel == pro_c) {
+		   FEXIT();
+		   return;
+	   }
+	   TRACE();
 	   halCurrentPtr = &(halLevels[++halAiLevel]);
 	   p->p2.paddleSpeed = halCurrentPtr->paddlespeed;
    }
    if((p->p1.totalpoints + maxdiff_c <=  p->p2.totalpoints) || (p->p1.score == 0)) {
-	   if(halAiLevel == novice_c) return;
+	   if(halAiLevel == novice_c) {
+		   FEXIT();
+		   return;
+	   }
+	   TRACE();
 	   halCurrentPtr = &(halLevels[--halAiLevel]);
 	   p->p2.paddleSpeed = halCurrentPtr->paddlespeed;
    }
    DEBUG2("HAL skill: ", halAiLevel);
-
+   FEXIT();
 } // end-of-function SetHalIntelligence
 
 
@@ -1190,9 +1282,13 @@ SetHalIntelligence(PongData* p) {
 static void
 HAL9000AI(PongData* p) {
 
+	FENTRY();
 	TRACE();
     	//update only when ball moves towards the player
-	if(p->ball.xspeed > 0) return;
+	if(p->ball.xspeed > 0) {
+		FEXIT();
+		return;
+	}
 	float mult = 1;
 	if(p->ball.xposition > p->display.width/halCurrentPtr->cond[0]) mult = halCurrentPtr->val[0];
 	if(p->ball.xposition <= p->display.width/halCurrentPtr->cond[1]) mult = halCurrentPtr->val[1];
@@ -1230,6 +1326,7 @@ HAL9000AI(PongData* p) {
 		}
 		if(p->p2.ge.yposition < 0) p->p2.ge.yposition = 0;
 	}
+	FEXIT();
 } // end-of-function HAL9000AI
 
 
@@ -1253,12 +1350,13 @@ HAL9000AI(PongData* p) {
 static bool
 GameLoop(PongData* p) {
 
+	FENTRY();
 	TRACE();
 	StartTimers(p);
 
 	bool roundwin = false;
 	int skipCounter = 0;
-	int maxSkip = 45;
+	const int maxSkip_c = 45;
 
 
 	PlaySound(p->startsample);
@@ -1267,11 +1365,11 @@ GameLoop(PongData* p) {
 	//This function blocks until an event is recieved
 	//Therefore if the timers would not be started, this function would return only on a keyboard or mouse event
 	while (true){
-		TRACE();
 		al_wait_for_event(p->eventqueue, &(p->ev));
 
 		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-					return false;
+			FEXIT();
+			return false;
 		}
 		//If the round is won we need to stop the game for 1 second
 		//We do this by counting timer events without processing them which in effect
@@ -1284,11 +1382,12 @@ GameLoop(PongData* p) {
 				//At the end of each round we want to keep the last frame of the play that shows where the ball exitied the screen
 					//for a little longer, so the user can see who won the round
 				//We do this by counting frame timer events
-				if(skipCounter++ >= maxSkip) {
+				if(skipCounter++ >= maxSkip_c) {
 					skipCounter = 0;
 					roundwin = false;
 					if(PrintRoundWinner(p) == false ) {
 						//user has pressed ESC to end the game
+						FEXIT();
 						return false;
 					}
 				}
@@ -1298,13 +1397,8 @@ GameLoop(PongData* p) {
 		}
 		else {
 			TRACE();
-			//check if escape key has been pressed if not then proceed to update the game screen
-			if(ProcessKeyPress(p) == false) {
-				//user has ended game
-				return false;
-			}
-			//Calculates next position of the paddles based on the key inputs read above
-			MovePaddles(p);
+
+			//if this is a hal logic event we need to let hal work
 			if(p->arcade == true &&
 			   p->ev.type == ALLEGRO_EVENT_TIMER &&
 			   p->ev.timer.source == p->hal9000) {
@@ -1312,10 +1406,21 @@ GameLoop(PongData* p) {
 				// we have to run hal's ai logic.
 				HAL9000AI(p);
 			}
+			else {
+				//check if escape key has been pressed
+				if(ProcessKeyPress(p) == false) {
+					//user has ended game
+					FEXIT();
+					return false;
+				}
+			}
+			//check if we need to update the frame
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 			   p->ev.timer.source == p->timer) {
 				//If this is a screen update timer event then we have to redraw the screen
 				//we have to update the ball position and then draw all objects (players and ball)
+				//Calculates next position of the paddles based on the key inputs read above
+				MovePaddles(p);
 				roundwin = UpdateBallPosition(p);
 				DrawObjects(p);
 				//This function shows the content of the display buffer on the screen.
@@ -1324,6 +1429,7 @@ GameLoop(PongData* p) {
 		}
 	}
 
+	FEXIT();
 	return true;
 } // end-of-function GameLoop
 
@@ -1340,7 +1446,7 @@ GameLoop(PongData* p) {
  */
 static void
 GameExit(PongData* p) {
-
+	FENTRY();
 	TRACE();
 	al_rest(0.0);
 	al_destroy_display(p->display.display);
@@ -1356,6 +1462,7 @@ GameExit(PongData* p) {
 	al_destroy_bitmap(p->p1.ge.bmap);
 	al_destroy_bitmap(p->p2.ge.bmap);
 	al_destroy_bitmap(p->ball.bmap);
+	FEXIT();
 } // end-of-function GameExit
 
 
@@ -1379,7 +1486,7 @@ GameExit(PongData* p) {
 bool
 CreateGameData(int argc, char **argv) {
 	//sets the default player 1 and player 2 names
-
+	FENTRY();
 	TRACE();
 	PongData* p = &pong;
 
@@ -1506,8 +1613,7 @@ CreateGameData(int argc, char **argv) {
 		}
 	}//end-of-for
 
-	return true;
-
+	FEXIT();
 	return true;
 } // end-of-function CreateGameData
 
@@ -1526,6 +1632,7 @@ CreateGameData(int argc, char **argv) {
  */
 bool
 InitGame() {
+	FENTRY();
 	TRACE();
 	PongData* p = &pong;
 	//seed random number generator with time
@@ -1533,6 +1640,7 @@ InitGame() {
 	//initiallises allegro libraries
 	if (al_init() == 0) {
 		ERROR("Cannot init allegro");
+		FEXIT();
 		return false;
 	} //end-of-if(al_init() == 0)
 	al_init_primitives_addon();
@@ -1547,14 +1655,17 @@ InitGame() {
 
 	//tries to load font file
 	if (LoadFont(p, smallFont_c) == false) {
+		FEXIT();
 		return false;
 	} //end-of-if(LoadFont(p, smallFont_c) == false)
 
 	if (LoadFont(p, regularFont_c) == false) {
+		FEXIT();
 		return false;
 	} //end-of-if(LoadFont(p, regularFont_c) == false)
 
 	if (LoadFont(p, largeFont_c) == false) {
+		FEXIT();
 		return false;
 	} //end-of-if(LoadFont(p, largeFont_c) == false)
 
@@ -1566,6 +1677,7 @@ InitGame() {
 
 	if((p->display.display = al_create_display(p->display.width, p->display.height)) == NULL) {
 		ERROR("Cannot init display");
+		FEXIT();
 		return false;
 	}
 
@@ -1591,9 +1703,18 @@ InitGame() {
 	}
 	else p->hal9000 = NULL;
 
-	if(LoadPlayerBitmap(&(p->p1.ge), p->level) == false) return false;
-	if(LoadPlayerBitmap(&(p->p2.ge), p-> level) == false) return false;
-	if(LoadBitmap(&(p->ball)) == false) return false;
+	if(LoadPlayerBitmap(&(p->p1.ge), p->level) == false) {
+		FEXIT();
+		return false;
+	}
+	if(LoadPlayerBitmap(&(p->p2.ge), p-> level) == false) {
+		FEXIT();
+		return false;
+	}
+	if(LoadBitmap(&(p->ball)) == false) {
+		FEXIT();
+		return false;
+	}
 
 	LoadAudio(&(p->p1));
 	LoadAudio(&(p->p2));
@@ -1602,7 +1723,7 @@ InitGame() {
 	InitialPosition(p);
 
 	SetBackgroundColor(*(p->bcolor));
-
+	FEXIT();
 	return true;
 } // end-of-function InitGame
 
@@ -1619,7 +1740,7 @@ InitGame() {
  */
 void
 GameRun() {
-
+	FENTRY();
 	TRACE();
 	PongData* p = &pong;
 	SetBackgroundColor(*(p->bcolor));
@@ -1628,4 +1749,5 @@ GameRun() {
 	}
 
 	GameExit(p);
+	FEXIT();
 } // end-of-function GameRun

@@ -26,11 +26,13 @@ static const char resultsFileName[] = "pong-results.txt";
 bool
 recordResult(char* p) {
 
-
+	FENTRY();
+	TRACE();
 	FILE* fptr;
 	fptr = fopen(resultsFileName, "a");
 	if(fptr == NULL){
 		INFO("The file does not exist");
+		FEXIT();
 		return false;
 	}
 	time_t rawtime;
@@ -44,6 +46,7 @@ recordResult(char* p) {
 
 	fprintf(fptr,"%s %s \n", buffer, p);
 	fclose(fptr);
+	FEXIT();
 	return true;
 } // end-of-function recordResult
 

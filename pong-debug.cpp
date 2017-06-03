@@ -13,6 +13,9 @@ bool debugon = false;
 bool traceon = false;
 int  debuglevel = debug_c;
 
+static int calldepth = 0;
+static const int nospaces_c = 2;
+
 /**
   ---------------------------------------------------------------------------
    @author  dwlambiri
@@ -57,10 +60,66 @@ printDebugTime() {
 	timeinfo = localtime (&newtime);
 	strftime (tb,40,"%F %T",timeinfo);
 
-	sprintf(buffer, "%s.%d", tb,  usec);
+	sprintf(buffer, "%s.%06d", tb,  usec);
 
 	return buffer;
 } // end-of-function printDebugTime
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 3, 2017
+   @mname   functionEnter
+   @details
+	  we want to count how many function calls are on top of this one
+	  add to a counter at the beggining of the function call\n
+  --------------------------------------------------------------------------
+ */
+void
+functionEnter() {
+
+	calldepth += nospaces_c;
+} // end-of-function functionEnter
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 3, 2017
+   @mname   functionExit
+   @details
+	  we want to decrement went we exit a function\n
+  --------------------------------------------------------------------------
+ */
+void
+functionExit() {
+
+	calldepth -= nospaces_c;
+} // end-of-function functionExit
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 3, 2017
+   @mname   printCallDepth
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+char*
+printCallDepth() {
+
+	static char buffer[200];
+	int i;
+	for (i = 0; i < calldepth; i++ ) {
+		buffer[i] = ' ';
+	} //end-of-for
+	buffer[i] = 0;
+
+	return buffer;
+} // end-of-function printCallDepth
 
 
 

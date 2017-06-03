@@ -13,7 +13,7 @@
 
 //===== Public Data =====
 
-#define VERSION "1.6"
+#define VERSION "1.7"
 
 /**
   ---------------------------------------------------------------------------
@@ -102,6 +102,10 @@ main(int argc, char **argv) {
 #endif
 		}
 	} //end-of-for
+
+	// trace is enabled via command line params
+	// if placed before it will not print
+	TRACE();
 
 	//Process the configuration file and extract all the game configuration
 	char** p = GetParameters(&num, configFileName);

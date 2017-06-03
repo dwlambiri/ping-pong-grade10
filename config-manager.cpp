@@ -36,7 +36,8 @@ static char* params[numberParams_c];
 char**
 GetParameters(int* n, char* configFileName) {
 
-
+	FENTRY();
+	TRACE();
 	FILE* fptr = NULL;
 	if (configFileName == NULL) {
 		fptr = fopen(configName, "r");
@@ -53,6 +54,7 @@ GetParameters(int* n, char* configFileName) {
 	if(fptr == NULL){
 		INFO("The file does not exist");
 		*n = 0;
+		FEXIT();
 		return params;
 	}
 	int amountleft = bufferSize_c;
@@ -86,6 +88,7 @@ GetParameters(int* n, char* configFileName) {
 	} //end-of-while(fgets(buffer, bufferSize_c, fptr))
 	fclose(fptr);
 	*n = counter;
+	FEXIT();
 	return params;
 } // end-of-function GetParameters
 

@@ -25,17 +25,22 @@ extern bool traceon;
 extern int  debuglevel;
 
 char* printDebugTime();
+void  functionEnter();
+void  functionExit();
+char* printCallDepth();
 
 #define PONGDEBUG
 
 #ifdef PONGDEBUG
-#define DEBUG(s) if(debugon && debuglevel == debug_c) printf("Debug[%s %s:%d] %s\n", printDebugTime(),__FILE__, __LINE__,s)
-#define DEBUG2(s,d) if(debugon && debuglevel == debug_c) printf("Debug[%s %s:%d] %s %d\n", printDebugTime(), __FILE__, __LINE__,s, d)
-#define INFO(s) if(debugon && debuglevel <= info_c) printf("Info[%s %s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
-#define WARN(s) if(debugon && debuglevel <= warn_c) printf("Warn[%s %s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
-#define ERROR(s) if(debugon && debuglevel <= error_c) printf("Error[%s %s:%d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
+#define DEBUG(s) if(debugon && debuglevel == debug_c) printf("Debug[%s %s:%4d] %s\n", printDebugTime(),__FILE__, __LINE__,s)
+#define DEBUG2(s,d) if(debugon && debuglevel == debug_c) printf("Debug[%s %s:%4d] %s %d\n", printDebugTime(), __FILE__, __LINE__,s, d)
+#define INFO(s) if(debugon && debuglevel <= info_c) printf("Info[%s %s:%4d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
+#define WARN(s) if(debugon && debuglevel <= warn_c) printf("Warn[%s %s:%4d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
+#define ERROR(s) if(debugon && debuglevel <= error_c) printf("Error[%s %s:%4d] %s\n", printDebugTime(), __FILE__, __LINE__,s)
+#define FENTRY() functionEnter()
+#define FEXIT()   functionExit()
 
-#define TRACE() if(traceon) printf("Trace<%s: %s:%d> %s;\n", printDebugTime(), __FILE__, __LINE__, __PRETTY_FUNCTION__)
+#define TRACE() if(traceon) printf("Trace<%s: %s:%4d> %s%s;\n", printDebugTime(), __FILE__, __LINE__, printCallDepth(), __PRETTY_FUNCTION__)
 #else
 #define DEBUG(s)
 #define DEBUG2(s,d)
@@ -43,6 +48,8 @@ char* printDebugTime();
 #define WARN(s)
 #define ERROR(s)
 #define TRACE()
+#define FENTRY()
+#define FEXIT()
 #endif
 
 #endif /* PONG_DEBUG_H_ */
