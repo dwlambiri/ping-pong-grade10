@@ -240,6 +240,7 @@ static bool LoadWinAudio(PongData* p );
 static bool LoadFont(PongData* p, int size);
 static void InitialPosition(PongData* p);
 static bool ProcessKeyPress(PongData* p);
+bool PressAnyKeyToBegin(PongData* p);
 static void MovePaddles(PongData* p);
 static int DrawText(PongData* p, char* text, int x ,int y, int size);
 static bool DisplayTextAndWaitBegin(PongData* p);
@@ -263,6 +264,7 @@ static bool LoadPlayerBitmap(GameEntity* g, int level);
 static void SetHalIntelligence(PongData* p);
 static void StopTimers(PongData* p);
 static void StartTimers(PongData* p);
+static bool PauseGame(PongData* p);
 
 //======= PRIVATE FUNCTIONS =========
 /**
@@ -476,6 +478,48 @@ InitialPosition(PongData* p) {
 } // end-of-function InitialPosition
 
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 3, 2017
+   @mname   PauseGame
+   @details
+	  Wait for P or ESC to be pressed again\n
+  --------------------------------------------------------------------------
+ */
+static bool
+PauseGame(PongData* p) {
+	//To pause the game we need to stop the timers
+	StopTimers(p);
+	while(true) {
+		//wait for an event
+		al_wait_for_event(p->eventqueue, &(p->ev));
+		//check if the event is a key press
+		//can be something else as the event queue
+		//has other sources
+		if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
+			switch (p->ev.keyboard.keycode){
+			case ALLEGRO_KEY_ESCAPE:
+				//exit game
+				return false;
+			case ALLEGRO_KEY_P:
+				//P was pressed again
+				//we want no events in the queue
+				//and we want to start the timers
+				al_flush_event_queue(p->eventqueue);
+				StartTimers(p);
+				return true;
+			}
+		}
+		//close the display with the mouse
+		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+			return false;
+		}
+	}
+	return true;
+
+} // end-of-function PauseGame
+
 
 
 /**
@@ -513,6 +557,9 @@ ProcessKeyPress(PongData* p) {
 			else p->p2.keyPress[1] = true;
 			p->p1.keyPress[0] = false;
 			break;
+		case ALLEGRO_KEY_P:
+			if(PauseGame(p) ==false ) return false;
+			break;
 		case ALLEGRO_KEY_ESCAPE:
 			//exit game
 			return false;
@@ -536,9 +583,48 @@ ProcessKeyPress(PongData* p) {
 			//exit game
 			return false;
 		}
+	} else if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+		return false;
 	}
 	return true;
 } // end-of-function ProcessKeyPress
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 3, 2017
+   @mname   PressAnyKeyToBegin
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+bool
+PressAnyKeyToBegin(PongData* p) {
+
+	al_flush_event_queue(p->eventqueue);
+
+	while(true) {
+		//wait for an event
+		al_wait_for_event(p->eventqueue, &(p->ev));
+		//check if the event is a key press
+		//can be something else as the event queue
+		//has other sources
+		if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
+			switch (p->ev.keyboard.keycode){
+			case ALLEGRO_KEY_ESCAPE:
+				//exit game
+				return false;
+			default:
+				return true;
+			}
+		}
+		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+			return false;
+		}
+	}
+	return true;
+} // end-of-function PressAnyKeyToBegin
+
 
 
 /**
@@ -642,16 +728,8 @@ DisplayTextAndWaitBegin(PongData* p) {
 		DrawText(p, (char*)"You've got balls mate: Balls of Fury Mode activated!!", p->display.width/2, next, regularFont_c);
 	}
 	al_flip_display();
-	al_flush_event_queue(p->eventqueue);
-	al_wait_for_event(p->eventqueue, &(p->ev));
-	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
-		switch (p->ev.keyboard.keycode){
-		case ALLEGRO_KEY_ESCAPE:
-			//exit game
-			return false;
 
-		}
-	}
+	if(PressAnyKeyToBegin(p) == false) return false;
 	DEBUG2("HAL skill: ", halAiLevel);
 	return true;
 } // end-of-function DisplayTextAndWaitBegin
@@ -706,9 +784,9 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 
 	DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, p->display.height/2, regularFont_c);
 	al_flip_display();
-	al_flush_event_queue(p->eventqueue);
-	al_wait_for_event(p->eventqueue, &(p->ev));
-	if(ProcessKeyPress(p) == false) return false;
+
+	if(PressAnyKeyToBegin(p) == false) return false;
+
 	for (int i = 0; i < 2; i++ ) {
 		p->p1.keyPress[i] = false;
 		p->p2.keyPress[i] = false;
@@ -1445,7 +1523,10 @@ InitGame() {
 	//seed random number generator with time
 	srand (time(NULL));
 	//initiallises allegro libraries
-	al_init();
+	if (al_init() == 0) {
+		ERROR("Cannot init allegro");
+		return false;
+	} //end-of-if(al_init() == 0)
 	al_init_primitives_addon();
 	al_init_image_addon();
 	al_install_keyboard();
@@ -1475,7 +1556,11 @@ InitGame() {
 		strcpy(p->p2.name, halname);
 	}
 
-	p->display.display = al_create_display(p->display.width, p->display.height);
+	if((p->display.display = al_create_display(p->display.width, p->display.height)) == NULL) {
+		ERROR("Cannot init display");
+		return false;
+	}
+
 	p->bcolorarray[yellow_c] = al_map_rgb(255, 255, 0);
 	p->bcolorarray[blue_c] = al_map_rgb(200, 200, 255);
 	p->bcolorarray[white_c] = al_map_rgb(255, 255, 255);
@@ -1484,7 +1569,9 @@ InitGame() {
 	p->fcolor = al_map_rgb(0, 0, 0);
 	p->timer = al_create_timer(REFRESHTIME);
 	p->eventqueue = al_create_event_queue();
-	if(al_is_event_queue_empty(p->eventqueue) == false) ERROR("Event queue not empty after creation");
+	if(al_is_event_queue_empty(p->eventqueue) == false) {
+		ERROR("Event queue not empty after creation");
+	}
 
 	al_register_event_source(p->eventqueue, al_get_keyboard_event_source());
 	al_register_event_source(p->eventqueue, al_get_display_event_source(p->display.display));
