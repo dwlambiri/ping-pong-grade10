@@ -15,6 +15,10 @@
 
 typedef unsigned int uint;
 
+
+//===== CONSTANT DEFINITIONS ========
+//The game relies upon many constants to give default values to its data structures
+//As well as a define default file names for its reasources
 static const int MAXNAME = 200;
 static const int SCREEN_W = 1600;
 static const int SCREEN_H = 1200;
@@ -50,13 +54,26 @@ static const char FONTNAME[] =  "pirulen.ttf";
 static const char halname[] = "HAL9000";
 
 
+//======= GAME STRUCTURE DEFINITIONS =========
+
 /**
   ---------------------------------------------------------------------------
    @author     dwlambiri
    @date       May 22, 2017
    @name       GameEntity
-   @details		The GameEntitiy structure is used for the information and
-	logic of game entities (the ball and the players).
+   @details
+     The GameEntitiy structure is used for the information and
+	 logic of game entities (the ball and the players).
+	 Allegro 5 uses a system of coordinates that has (0,0) in the top left corner of the screen
+	 x values increase from left to right and y values increase from top to bottom
+	 A GameEntity location on the screen is defined by the position of that bitmap's top left corner
+	 xposition represents the distance from the edge of the screen of the top left corner of the bitmap
+	 yposition represents the distance from the top of screen to the top left corner of the bitmap.
+	 xspeed represents the number of pixels that the game entitiy will move on the x axis during one frame.
+	 yspeed represents the number of pixels the game entity moves up and down in one refresh of the screen
+	 The players have an xspeed of 0 (cannot move left to right).
+	 The width is the number of pixels on the x dimension of the bitmap
+	 The height is the number of pixels in the y dimension of the bitmap
 	\n
   ---------------------------------------------------------------------------
  */
@@ -79,7 +96,9 @@ typedef struct GameEntity {
    @date       May 22, 2017
    @name       Player
    @details		contains all player information
-	\n
+		Player is a game entity that has several extra variables
+		Scores and sounds that are player when a the ball hits a pallete
+		Each player may have their own sound\n
   ---------------------------------------------------------------------------
  */
 typedef struct Player {
@@ -114,13 +133,38 @@ typedef struct Display {
 
 #define INITDISPLAY {SCREEN_W, SCREEN_H, NULL}
 
+/*
+ * @author   dwlambiri
+ * @date     Jun 2, 2017
+ *  HAL needs two arrays of values to decide when and how fast to move
+ *  This structure stores them in one group both arrays.
+ *  HAL adapts his own skill to match the level of skill of the human player
+ *  This is done by keeping several sets of variables for HAL's AI.
+ *  cond is a divisor of the field length
+ *  Because HAL plays the side x = 0 The greater the divisor the closer the ball is to him
+ *  val is a multiplier that will make HAL move faster or slower between two frames
+ *  If the value of n == 0 HAL will not move
+ *  Therefore placing all zeroes in HAL will render him immobile at the center
+ *
+ */
+typedef struct AiValues {
+	//first array represents where in the field HAL will start to move
+	int cond[halarrays_c];
+	//This array is a multiplier to determine how much HAL should move
+	//setting an entry to zero will prevent HAL from moving
+	float val[halarrays_c];
+	int paddlespeed;
+}AiValues;
+
+
 /**
   ---------------------------------------------------------------------------
    @author     dwlambiri
    @date       May 22, 2017
    @name       PongData
    @details
-	\n
+	This is the main data structure
+	It aggregates all the required variables that make the game run \n
   ---------------------------------------------------------------------------
  */
 typedef struct PongData {
@@ -152,7 +196,9 @@ typedef struct PongData {
 
 //======== Game Data ===========
 
+//========VARIUABLE DECLARATIONS=====
 //declaring the main data variable of the game
+//usually passed to functions using a pointer
 static PongData pong = {
 		INITPLAYER,
 		INITPLAYER,
@@ -168,19 +214,12 @@ static PongData pong = {
 		{0}
 };
 
-typedef struct AiValues {
-	//first array represents where in the field HAL will start to move
-	int cond[halarrays_c];
-	//This array is a multiplier to determine how much HAL should move
-	//setting an entry to zero will prevent HAL from moving
-	float val[halarrays_c];
-	int paddlespeed;
-}AiValues;
-
+//It is an array that stores several sets of conditions and values
+//The values make Hal more responsive as the index in the array increases
 AiValues halLevels[pro_c + 1] = {
 		{{2, 2, 3, 4, 8}, {0.25, 0.25, 0.25 , 0.25, 0.25}, PLAYERSPEED},
 		{{2, 2, 3, 4, 8}, {0.5, 0.5, 0.5 , 0.5, 0.5}, PLAYERSPEED},
-		{{2, 2, 3, 4, 8}, {1, 1, 1 , 1, 1}, PLAYERSPEED},
+		{{2, 2, 3, 4, 8}, {1, 1, 1 , 2, 2}, PLAYERSPEED},
 		{{2, 2, 3, 4, 8}, {1, 1, 1.5 , 2, 3}, 40}
 };
 
@@ -222,6 +261,8 @@ static int SignOfNumber(int value);
 static void DrawBitmapSection(GameEntity* g);
 static bool LoadPlayerBitmap(GameEntity* g, int level);
 static void SetHalIntelligence(PongData* p);
+static void StopTimers(PongData* p);
+static void StartTimers(PongData* p);
 
 //======= PRIVATE FUNCTIONS =========
 /**
@@ -544,7 +585,9 @@ MovePaddles(PongData* p) {
    @date    May 22, 2017
    @mname   DrawText
    @details
-	  Displays text on screen using allegro\n
+	  Displays text on screen using allegro
+	  Declared an enumeration of text sizes
+	  Different text sizes are used for different messages \n
   --------------------------------------------------------------------------
  */
 static int
@@ -621,7 +664,9 @@ DisplayTextAndWaitBegin(PongData* p) {
    @details
 	  Returns false if escape key is pressed
 	  This function displays a screen when a round or game is won
-	  The text for the two conditions will be different \n
+	  The text for the two conditions will be different
+	  We declare the temporary variable next to position text messages one on top of another
+	  We do this by adding a value to the y coordinate of the message\n
   --------------------------------------------------------------------------
  */
 static bool
@@ -761,7 +806,7 @@ CheckTopBottomCollision(PongData* p) {
    @date    May 22, 2017
    @mname   CheckSideCollitions
    @details
-	  \n
+	  Checks if the ball hits either player's side of the field and grants a roundwin\n
   --------------------------------------------------------------------------
  */
 static bool
@@ -801,6 +846,39 @@ PlaySound(ALLEGRO_SAMPLE* s) {
 	if(s) al_play_sample(s, 1.0, 0.0,1.0,ALLEGRO_PLAYMODE_ONCE,NULL);
 } // end-of-function PlaySound
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 2, 2017
+   @mname   StopTimers
+   @details
+	  Stops all game timers \n
+  --------------------------------------------------------------------------
+ */
+static void
+StopTimers(PongData* p) {
+
+	al_stop_timer(p->timer);
+	if(p->arcade) al_stop_timer(p->hal9000);
+
+} // end-of-function StopTimers
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 2, 2017
+   @mname   StartTimers
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+static void
+StartTimers(PongData* p) {
+
+	al_start_timer(p->timer);
+	if(p->arcade) al_start_timer(p->hal9000);
+} // end-of-function StartTimers
+
 
 
 /**
@@ -819,9 +897,7 @@ static bool
 PrintRoundWinner(PongData* p) {
 
 	TRACE();
-	al_stop_timer(p->timer);
-	if(p->arcade) al_stop_timer(p->hal9000);
-
+	StopTimers(p);
 	InitialPosition(p);
 	DrawObjects(p);
 
@@ -829,8 +905,7 @@ PrintRoundWinner(PongData* p) {
 		return false;
 	}
 	else {
-		al_start_timer(p->timer);
-		if(p->arcade) al_start_timer(p->hal9000);
+		StartTimers(p);
 		PlaySound(p->startsample);
 	}
 
@@ -1082,27 +1157,33 @@ HAL9000AI(PongData* p) {
    @date    May 22, 2017
    @mname   GameLoop
    @details
-	  This function contains the game loop.
+	  Two dimensional games process events and screen updates in a continuous loop
+	  usually this loop is called a game loop
 	  The loop processes events from p->eventqueue.
 	  Events come from the two game timers (one is for screen refresh,
-	  the other is for HAL AI) as well as keyboard and mouse events.\n
+	  the other is for HAL AI) as well as keyboard and mouse events.
+	  The loop waits for an event to be fired and then processes the event
+	  If the event is of the type refresh display, all objects are written to a display buffer
+	  Then that buffer is shown on the screen. \n
   --------------------------------------------------------------------------
  */
 static bool
 GameLoop(PongData* p) {
 
 	TRACE();
-	al_start_timer(p->timer);
-	if(p->arcade == true) {
-		al_start_timer(p->hal9000);
-	}
+	StartTimers(p);
 
 	bool roundwin = false;
 	int skipCounter = 0;
 	int maxSkip = 45;
-	PlaySound(p->startsample);
-	while (true){
 
+
+	PlaySound(p->startsample);
+	//We are waiting for an event from on one of the sources that are linked to the event queue
+	//The frame-timer, keyboard, mouse, and HAL timer if in arcade mode
+	//This function blocks until an event is recieved
+	//Therefore if the timers would not be started, this function would return only on a keyboard or mouse event
+	while (true){
 		al_wait_for_event(p->eventqueue, &(p->ev));
 
 		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
@@ -1115,6 +1196,9 @@ GameLoop(PongData* p) {
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 					   p->ev.timer.source == p->timer) {
 				//skip maxSkip frames
+				//At the end of each round we want to keep the last frame of the play that shows where the ball exitied the screen
+					//for a little longer, so the user can see who won the round
+				//We do this by counting frame timer events
 				if(skipCounter++ >= maxSkip) {
 					skipCounter = 0;
 					roundwin = false;
@@ -1148,7 +1232,7 @@ GameLoop(PongData* p) {
 				//we have to update the ball position and then draw all objects (players and ball)
 				roundwin = UpdateBallPosition(p);
 				DrawObjects(p);
-				//we need to flip the display, not enirely sure why however this is how allegro tutorial recomends
+				//This function shows the content of the display buffer on the screen.
 				al_flip_display();
 			}
 		}

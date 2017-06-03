@@ -19,6 +19,17 @@ static char* params[numberParams_c];
    @date    May 26, 2017
    @mname   GetParameters
    @details
+	  Originally the game was getting the config parameters from the command
+	  line, however as the program grew more complicated I moved the config processing
+	  to a file. GetParameters tries to open configFileName file and if not present
+	  it opens configName file.
+	  Lines starting with the # sign are comments and are skipped.
+	  The parameters and their values are put in an array similar to the one passed
+	  to the main function.
+	  We use text[] as a buffer in which we tokenize (transforms a character array
+	  into multiple strings by placing zeros inside the character array).
+	  Pointers to the strings are stored in params[], while *n is equal to the number of entries
+	  placed in params[].
 	  \n
   --------------------------------------------------------------------------
  */

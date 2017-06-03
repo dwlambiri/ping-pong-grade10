@@ -17,7 +17,10 @@ static const char resultsFileName[] = "pong-results.txt";
    @date    May 30, 2017
    @mname   recordResult
    @details
-	  \n
+	  After each game is finished I wanted to record the result of the game to
+	  a text file.
+	  This function opens resultsFileName[] and appends p.
+	  Then the textfile is closed. \n
   --------------------------------------------------------------------------
  */
 bool

@@ -13,7 +13,7 @@
 
 //===== Public Data =====
 
-#define VERSION "1.3"
+#define VERSION "1.4"
 
 /**
   ---------------------------------------------------------------------------
@@ -21,7 +21,12 @@
    @date    May 22, 2017
    @mname   Usage
    @details
-	  \n
+	  If PONGDEBUG is defined the function prints the a message saying that this
+	  is a debug executable
+	  If PONGDEBUG is not defined it means that this if a release executable and that
+	  all code will remain hidden from the user.
+	  The function is used to print a description of the command line parameters
+	  to the console. \n
   --------------------------------------------------------------------------
  */
 static void
@@ -56,6 +61,7 @@ char** GetParameters(int* , char*);
    @return  the return code
    @details
 	The main function of the program.
+
 	\n
   --------------------------------------------------------------------------
  */
@@ -64,7 +70,7 @@ main(int argc, char **argv) {
 
 	char* configFileName = NULL;
 	int num = 0;
-
+	//WE process the program command line parameters first
 	for (int  param = 1; param < argc; param++ ) {
 		if (strcmp(argv[param], "-c") == 0) {
 			if (++param < argc) {
@@ -74,6 +80,7 @@ main(int argc, char **argv) {
 			Usage();
 			return 1;
 		}
+		//Some command line paramters are available only in the debug executable
 #ifdef PONGDEBUG
 		else if (strcmp(argv[param], "-d") == 0) {
 			debugon = true;
@@ -96,15 +103,21 @@ main(int argc, char **argv) {
 		}
 	} //end-of-for
 
+	//Process the configuration file and extract all the game configuration
 	char** p = GetParameters(&num, configFileName);
+
 	//printf("Adress of GameRun = %x \n", &GameRun);
+	//After the parameters are read from the file they are passed to the game
+	//configuration functions to change game variable values
 	if(CreateGameData(num, p) == false) return 0;
 
+	//We are initializing the game data structures
 	if(InitGame() == false ) {
 		//error initializing the game;
 		return 22;
 	}
 
+	//All that is left is to run the game
 	GameRun();
 
 	return 0;

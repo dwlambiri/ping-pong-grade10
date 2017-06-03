@@ -2,9 +2,9 @@
 # no '"' characters are allowed
 
 #screenwidth sets the width of the screen, it is in pixels
-screenwidth = 2000
+screenwidth = 1300
 
-screenheight = 1000
+screenheight = 900
 fontsize = 34
 
 p1name = DRitchie

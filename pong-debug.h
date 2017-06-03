@@ -8,6 +8,17 @@
 #ifndef PONG_DEBUG_H_
 #define PONG_DEBUG_H_
 
+/*
+ * @author   dwlambiri
+ * @date     Jun 2, 2017
+ *  I needed a way to test my code while running.
+ *  If PONGDEBUG is defined the following defines insert code that print various messages.
+ *  If PONGDEBUG is not defined the macros are replaced with NULL strings.
+ *  The defines contain special macros to print file names, function names, and code lines.
+ *
+ */
+
+
 enum DEBUGENUM { debug_c =0, info_c = 1, warn_c = 2, error_c = 3};
 extern bool debugon;
 extern bool traceon;
