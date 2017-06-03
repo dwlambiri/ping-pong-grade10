@@ -490,8 +490,10 @@ InitialPosition(PongData* p) {
 static bool
 PauseGame(PongData* p) {
 	//To pause the game we need to stop the timers
+	TRACE();
 	StopTimers(p);
 	while(true) {
+		TRACE();
 		//wait for an event
 		al_wait_for_event(p->eventqueue, &(p->ev));
 		//check if the event is a key press
@@ -601,9 +603,11 @@ ProcessKeyPress(PongData* p) {
 bool
 PressAnyKeyToBegin(PongData* p) {
 
+	TRACE();
 	al_flush_event_queue(p->eventqueue);
 
 	while(true) {
+		TRACE();
 		//wait for an event
 		al_wait_for_event(p->eventqueue, &(p->ev));
 		//check if the event is a key press
@@ -766,7 +770,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 		next = DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
 
 		PlaySound(p->winsample);
-		sprintf(textBuffer, "[Mode: %s Level: %d %s %d %s %d]",(p->arcade?"Arcade":"Human"), p->level, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
+		sprintf(textBuffer, "[Mode: %s] [Level: %d] [Score: %s %d %s %d]",(p->arcade?"Arcade":"Human"), p->level, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
 		recordResult(textBuffer);
 		SetHalIntelligence(p);
 		p->p2.score = 0;
@@ -936,6 +940,7 @@ PlaySound(ALLEGRO_SAMPLE* s) {
 static void
 StopTimers(PongData* p) {
 
+	TRACE();
 	al_stop_timer(p->timer);
 	if(p->arcade) al_stop_timer(p->hal9000);
 
@@ -952,7 +957,7 @@ StopTimers(PongData* p) {
  */
 static void
 StartTimers(PongData* p) {
-
+	TRACE();
 	al_start_timer(p->timer);
 	if(p->arcade) al_start_timer(p->hal9000);
 } // end-of-function StartTimers
@@ -1262,6 +1267,7 @@ GameLoop(PongData* p) {
 	//This function blocks until an event is recieved
 	//Therefore if the timers would not be started, this function would return only on a keyboard or mouse event
 	while (true){
+		TRACE();
 		al_wait_for_event(p->eventqueue, &(p->ev));
 
 		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
@@ -1271,6 +1277,7 @@ GameLoop(PongData* p) {
 		//We do this by counting timer events without processing them which in effect
 		//skips frames
 		if(roundwin == true) {
+			TRACE();
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 					   p->ev.timer.source == p->timer) {
 				//skip maxSkip frames
@@ -1290,12 +1297,13 @@ GameLoop(PongData* p) {
 			else continue;
 		}
 		else {
-			//check if escape key has been pressesd if not then proceed to update the game screen
+			TRACE();
+			//check if escape key has been pressed if not then proceed to update the game screen
 			if(ProcessKeyPress(p) == false) {
 				//user has ended game
 				return false;
 			}
-			//Calculates next position of the paddles based on the key imputs read above
+			//Calculates next position of the paddles based on the key inputs read above
 			MovePaddles(p);
 			if(p->arcade == true &&
 			   p->ev.type == ALLEGRO_EVENT_TIMER &&
