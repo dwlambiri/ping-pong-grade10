@@ -1,3 +1,4 @@
-# ping-pong-grade10
-grade 10 cs project
-//Ping pong game made by Darius Lambiri for ICS3U course 
+#Grade 10 Pong Project
+(c) Darius W Lambiri 2017
+
+
