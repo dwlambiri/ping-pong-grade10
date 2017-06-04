@@ -1360,7 +1360,6 @@ GameLoop(PongData* p) {
 
 	bool roundwin = false;
 	int skipCounter = 0;
-	const int maxSkip_c = 45;
 
 
 	PlaySound(p->startsample);
@@ -1386,7 +1385,7 @@ GameLoop(PongData* p) {
 				//At the end of each round we want to keep the last frame of the play that shows where the ball exitied the screen
 					//for a little longer, so the user can see who won the round
 				//We do this by counting frame timer events
-				if(skipCounter++ >= maxSkip_c) {
+				if(skipCounter++ >= (int) p->fps) {
 					skipCounter = 0;
 					roundwin = false;
 					if(PrintRoundWinner(p) == false ) {
