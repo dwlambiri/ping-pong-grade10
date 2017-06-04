@@ -38,3 +38,6 @@ winSound = applause6.wav
 #level 1 is a paddle of 7 blocks while 
 #level 7 is a paddle of 1 block
 level = 1
+
+#frames per second min 5 max 240
+fps = 60

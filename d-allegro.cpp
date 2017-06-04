@@ -23,8 +23,10 @@ static const int MAXNAME = 200;
 static const int SCREEN_W = 1600;
 static const int SCREEN_H = 1200;
 //static const int PLAYEROFFSET = 100;
-static const float FRAMERATE = 60.0;
-static const float REFRESHTIME = 1.0/FRAMERATE;
+static const float MINFPS = 5;
+static const float MAXFPS = 240;
+static const float FRAMERATE = 60;
+//static const float REFRESHTIME = 1.0/FRAMERATE;
 static const float PLAYERSPEED = 10.0;
 //static const float COMPUTERSPEED = 10.0;
 //static const int SOMENUMBER = 11;
@@ -180,7 +182,7 @@ typedef struct PongData {
 	uint level;
 	char fontFileName[MAXNAME];
 	char winSoundFile[MAXNAME];
-
+	float  fps;
 
 	ALLEGRO_EVENT ev;
 	ALLEGRO_EVENT_QUEUE *eventqueue;
@@ -211,7 +213,9 @@ static PongData pong = {
 		MAXSCORE,
 		1,
 		{0},
-		{0}
+		{0},
+		FRAMERATE
+
 };
 
 //It is an array that stores several sets of conditions and values
@@ -1159,7 +1163,7 @@ CheckPaletteCollision(PongData* p) {
 			p->ball.yposition + p->ball.height >= p->p1.ge.yposition  &&
 			p->ball.yposition  <= p->p1.ge.yposition + p->p1.ge.height){
 
-			p->ball.xposition = p->p1.ge.xposition - p->p1.ge.width;
+			p->ball.xposition = p->p1.ge.xposition - p->ball.width;
 			PaletteBounceCalc(&(p->ball), &(p->p1), p->maxballspeed, p->level);
 			FEXIT();
 			return true;
@@ -1590,6 +1594,14 @@ CreateGameData(int argc, char **argv) {
 				if(p->level>maxlevel_c) p->level = maxlevel_c;
 			}
 		}
+		else if(strcmp(argv[param],"fps")==0) {
+			//display fps
+			if(++param < argc) {
+				p->fps = atof(argv[param]);
+				if(p->fps < MINFPS) p->fps = MINFPS;
+				if(p->fps > MAXFPS) p->fps = MAXFPS;
+			}
+		}
 		else if(strcmp(argv[param],"colourscheme")==0) {
 			//player 2 bitmap file name
 			if(++param < argc) {
@@ -1687,7 +1699,7 @@ InitGame() {
 	p->bcolorarray[green_c] = al_map_rgb(0, 255, 0);
 
 	p->fcolor = al_map_rgb(0, 0, 0);
-	p->timer = al_create_timer(REFRESHTIME);
+	p->timer = al_create_timer(1.0/p->fps);
 	p->eventqueue = al_create_event_queue();
 	if(al_is_event_queue_empty(p->eventqueue) == false) {
 		ERROR("Event queue not empty after creation");
