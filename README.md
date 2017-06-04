@@ -17,8 +17,9 @@ I used these sites extensively to develop the game
 
 [More pong games](https://codereview.stackexchange.com/questions/125148/pong-like-game-in-c-and-allegro5)
 
+Book: Game Engine Architecture by Jason Gregory (Chapter 1, Sections 2.1, 7.1, 7.2, 9.1) 
  
-### Some Allegro  5 tutorials
+### Allegro  5 Tutorials
 
 [Getting Started](https://wiki.allegro.cc/index.php?title=Getting_Started)
 
@@ -27,6 +28,12 @@ I used these sites extensively to develop the game
 [Bitmaps](https://wiki.allegro.cc/index.php?title=Allegro_5_Tutorial/Bitmaps)
 
 [Audio](https://wiki.allegro.cc/index.php?title=Allegro_5_Tutorial/Addons/Audio)
+
+### C and C++ Reference
+
+[Tutorial Point C Library Reference](https://www.tutorialspoint.com/c_standard_library/index.htm)
+
+[C/C++ Library Main Reference](http://www.cplusplus.com/reference/)
 
 
 ### Eclipse
