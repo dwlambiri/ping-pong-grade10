@@ -48,7 +48,7 @@ enum HALABILITY {novice_c = 0, intermediate_c, expert_c, pro_c};
 static const char P1FNAME[]  =  "player1.png";
 static const char P2FNAME[] =   "player2.png";
 static const char BALLFNAME[] = "ball.png";
-static const char ANIMATIONFNAME[] = "spritebmap01.png";
+static const char ANIMATIONFNAME[] = "ramona01.png";
 static const char P1SOUND[] =   "p1sound.ogg";
 static const char P2SOUND[] =   "p2sound.ogg";
 static const char FONTNAME[] =  "pirulen.ttf";
@@ -235,6 +235,7 @@ static int halAiLevel = expert_c;
 static AiValues* halCurrentPtr = &(halLevels[halAiLevel]);
 
 static float fpscount = 0;
+static int swidth_c = 16;
 
 
 //======= EXTERNAL FUNCTION DECLARATION=====//
@@ -810,7 +811,7 @@ AnimateSprite(PongData* p, int x, int y) {
 
 	FENTRY();
 	TRACE();
-	static const int swidth_c = 16;
+
 	static const int w_c = p->animation.width / swidth_c;
 	//static const int h_c = p->animation.height;
 	static int iter = 0;
@@ -1843,6 +1844,12 @@ CreateGameData(int argc, char **argv) {
 						break;
 				} //end-switch(argv[param][0])
 			}
+		}else if(strcmp(argv[param],"animate")==0) {
+			//player 2 bitmap file name
+			if(++param < argc) strcpy(p->animation.bitmapFileName, argv[param]);
+		}else if(strcmp(argv[param],"frames")==0) {
+			//font size
+			if(++param < argc) swidth_c = atoi(argv[param]);
 		}
 	}//end-of-for
 

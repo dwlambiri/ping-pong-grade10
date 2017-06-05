@@ -41,3 +41,9 @@ level = 1
 
 #frames per second min 5 max 240
 fps = 10
+
+#animate = spritebmap01.png
+animate = ramona01.png
+#how many frames does the file above contain
+#frames = 16
+frames = 42
