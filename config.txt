@@ -2,9 +2,9 @@
 # no '"' characters are allowed
 
 #screenwidth sets the width of the screen, it is in pixels
-screenwidth = 1300
+screenwidth = 1400
 
-screenheight = 900
+screenheight = 700
 fontsize = 34
 
 p1name = DRitchie
@@ -40,4 +40,4 @@ winSound = applause6.wav
 level = 1
 
 #frames per second min 5 max 240
-fps = 60
+fps = 10

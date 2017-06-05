@@ -48,6 +48,7 @@ enum HALABILITY {novice_c = 0, intermediate_c, expert_c, pro_c};
 static const char P1FNAME[]  =  "player1.png";
 static const char P2FNAME[] =   "player2.png";
 static const char BALLFNAME[] = "ball.png";
+static const char ANIMATIONFNAME[] = "spritebmap01.png";
 static const char P1SOUND[] =   "p1sound.ogg";
 static const char P2SOUND[] =   "p2sound.ogg";
 static const char FONTNAME[] =  "pirulen.ttf";
@@ -173,6 +174,7 @@ typedef struct PongData {
 	Player p1;
 	Player p2;
 	GameEntity   ball;
+	GameEntity   animation;
 	Display display;
 	bool   arcade;
 	int    maxballspeed;
@@ -205,6 +207,7 @@ static PongData pong = {
 		INITPLAYER,
 		INITPLAYER,
 		INITGE,
+		INITGE,
 		INITDISPLAY,
 		false,
 		maxballspeed_c,
@@ -231,6 +234,7 @@ AiValues halLevels[pro_c + 1] = {
 static int halAiLevel = expert_c;
 static AiValues* halCurrentPtr = &(halLevels[halAiLevel]);
 
+static float fpscount = 0;
 
 
 //======= EXTERNAL FUNCTION DECLARATION=====//
@@ -269,6 +273,7 @@ static void SetHalIntelligence(PongData* p);
 static void StopTimers(PongData* p);
 static void StartTimers(PongData* p);
 static bool PauseGame(PongData* p);
+static void DrawBitmapSection(GameEntity* g, int xs, int ys, int w);
 
 //======= PRIVATE FUNCTIONS =========
 /**
@@ -538,6 +543,16 @@ PauseGame(PongData* p) {
 				StartTimers(p);
 				FEXIT();
 				return true;
+			case ALLEGRO_KEY_EQUALS:
+				p->fps += 30;
+				if(p->fps > MAXFPS) p->fps = MAXFPS;
+				al_set_timer_speed(p->timer, 1.0/p->fps);
+				return true;
+			case ALLEGRO_KEY_MINUS:
+				p->fps /= 2;
+				if(p->fps < MINFPS) p->fps = MINFPS;
+				al_set_timer_speed(p->timer, 1.0/p->fps);
+				return true;
 			}
 		}
 		//close the display with the mouse
@@ -594,6 +609,16 @@ ProcessKeyPress(PongData* p) {
 				FEXIT();
 				return false;
 			}
+			break;
+		case ALLEGRO_KEY_EQUALS:
+			p->fps += 30;
+			if(p->fps > MAXFPS) p->fps = MAXFPS;
+			al_set_timer_speed(p->timer, 1.0/p->fps);
+			break;
+		case ALLEGRO_KEY_MINUS:
+			p->fps /= 2;
+			if(p->fps < MINFPS) p->fps = MINFPS;
+			al_set_timer_speed(p->timer, 1.0/p->fps);
 			break;
 		case ALLEGRO_KEY_ESCAPE:
 			//exit game
@@ -658,6 +683,16 @@ PressAnyKeyToBegin(PongData* p) {
 			case ALLEGRO_KEY_ESCAPE:
 				//exit game
 				return false;
+			case ALLEGRO_KEY_EQUALS:
+				p->fps += 30;
+				if(p->fps > MAXFPS) p->fps = MAXFPS;
+				al_set_timer_speed(p->timer, 1.0/p->fps);
+				return true;
+			case ALLEGRO_KEY_MINUS:
+				p->fps /= 2;
+				if(p->fps < MINFPS) p->fps = MINFPS;
+				al_set_timer_speed(p->timer, 1.0/p->fps);
+				return true;
 			default:
 				return true;
 			}
@@ -671,6 +706,56 @@ PressAnyKeyToBegin(PongData* p) {
 	return true;
 } // end-of-function PressAnyKeyToBegin
 
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 3, 2017
+   @mname   PressAnyKeyToBegin
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+bool
+CheckKeyToBegin(PongData* p) {
+
+	FENTRY();
+	TRACE();
+	al_flush_event_queue(p->eventqueue);
+
+	TRACE();
+	//wait for an event
+	al_wait_for_event(p->eventqueue, &(p->ev));
+	//check if the event is a key press
+	//can be something else as the event queue
+	//has other sources
+	if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
+		FEXIT();
+		//exits either way
+		switch (p->ev.keyboard.keycode){
+		case ALLEGRO_KEY_ESCAPE:
+			//exit game
+			return false;
+		case ALLEGRO_KEY_EQUALS:
+			p->fps += 30;
+			if(p->fps > MAXFPS) p->fps = MAXFPS;
+			al_set_timer_speed(p->timer, 1.0/p->fps);
+			return true;
+		case ALLEGRO_KEY_MINUS:
+			p->fps /= 2;
+			if(p->fps < MINFPS) p->fps = MINFPS;
+			al_set_timer_speed(p->timer, 1.0/p->fps);
+			return true;
+		default:
+			return true;
+		}
+	}
+	if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+		FEXIT();
+		return false;
+	}
+	FEXIT();
+	return true;
+} // end-of-function PressAnyKeyToBegin
 
 
 /**
@@ -710,6 +795,35 @@ MovePaddles(PongData* p) {
 
 	FEXIT();
 } // end-of-function MovePaddles
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 4, 2017
+   @mname   AnimateSprite
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+bool
+AnimateSprite(PongData* p, int x, int y) {
+
+	FENTRY();
+	TRACE();
+	static const int swidth_c = 16;
+	static const int w_c = p->animation.width / swidth_c;
+	//static const int h_c = p->animation.height;
+	static int iter = 0;
+
+	p->animation.xposition = x;
+	p->animation.yposition = y;
+
+	DrawBitmapSection(&(p->animation), w_c*iter,0, w_c );
+	iter = (iter + 1) % swidth_c;
+
+	FEXIT();
+	return true;
+} // end-of-function AnimateSprite
 
 
 
@@ -759,31 +873,64 @@ DrawText(PongData* p, char* text, int x ,int y, int size) {
 static bool
 DisplayTextAndWaitBegin(PongData* p) {
 
+
 	FENTRY();
 	TRACE();
-	int next = DrawText(p, (char*)"Welcome to Pong", p->display.width/2, p->display.height/4, largeFont_c);
-	al_flush_event_queue(p->eventqueue);
-	DrawText(p, (char*)"(c) dwlambiri 2017", p->display.width/2, next, smallFont_c);
+	StartTimers(p);
+	while(true) {
+		al_wait_for_event(p->eventqueue, &(p->ev));
+		if(p->ev.type == ALLEGRO_EVENT_TIMER &&
+	       p->ev.timer.source == p->timer) {
+			SetBackgroundColor(*(p->bcolor));
+			int next = DrawText(p, (char*)"Welcome to Pong", p->display.width/2, p->display.height/4, largeFont_c);
+			al_flush_event_queue(p->eventqueue);
+			DrawText(p, (char*)"(c) dwlambiri 2017", p->display.width/2, next, smallFont_c);
 
-	if (p->arcade == true) {
-		next = DrawText(p, (char*)"Arcade Mode (HAL is left)", p->display.width/2, p->display.height/2, regularFont_c);
-	} else {
-		next = DrawText(p, (char*)"Two Player Mode", p->display.width/2, p->display.height/2, regularFont_c);
-	}
-	char buffer[100];
-	sprintf(buffer, "First to %d Wins!", p->maxscore);
-	next = DrawText(p, buffer, p->display.width/2, next, regularFont_c);
-	next = DrawText(p, (char*)"Press a key to begin", p->display.width/2, next, regularFont_c);
+			if (p->arcade == true) {
+				next = DrawText(p, (char*)"Arcade Mode (HAL is left)", p->display.width/2, p->display.height/2, regularFont_c);
+			} else {
+				next = DrawText(p, (char*)"Two Player Mode", p->display.width/2, p->display.height/2, regularFont_c);
+			}
+			char buffer[100];
+			sprintf(buffer, "First to %d Wins!", p->maxscore);
+			next = DrawText(p, buffer, p->display.width/2, next, regularFont_c);
+			next = DrawText(p, (char*)"Press a key to begin", p->display.width/2, next, regularFont_c);
 
-	if(p->level == maxlevel_c) {
-		DrawText(p, (char*)"You've got balls mate: Balls of Fury Mode activated!!", p->display.width/2, next, regularFont_c);
-	}
-	al_flip_display();
+			if(p->level == maxlevel_c) {
+				next = DrawText(p, (char*)"You've got balls mate: Balls of Fury Mode activated!!", p->display.width/2, next, regularFont_c);
+			}
+			// animation here
+			AnimateSprite(p, p->display.width/2, next);
 
-	if(PressAnyKeyToBegin(p) == false) {
-		FEXIT();
-		return false;
+			al_flip_display();
+		}
+		if (p->ev.type == ALLEGRO_EVENT_KEY_DOWN){
+			switch (p->ev.keyboard.keycode){
+			case ALLEGRO_KEY_ESCAPE:
+				//exit game
+				FEXIT();
+				return false;
+			case ALLEGRO_KEY_EQUALS:
+				p->fps += 30;
+				if(p->fps > MAXFPS) p->fps = MAXFPS;
+				al_set_timer_speed(p->timer, 1.0/p->fps);
+				break;
+			case ALLEGRO_KEY_MINUS:
+				p->fps /= 2;
+				if(p->fps < MINFPS) p->fps = MINFPS;
+				al_set_timer_speed(p->timer, 1.0/p->fps);
+				break;
+			default:
+				FEXIT();
+				return true;
+			}
+		}
+		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+			FEXIT();
+			return false;
+		}
 	}
+	StopTimers(p);
 	DEBUG2("HAL skill: ", halAiLevel);
 	FEXIT();
 	return true;
@@ -896,6 +1043,68 @@ DrawBitmapSection(GameEntity* g) {
 /**
   ---------------------------------------------------------------------------
    @author  dwlambiri
+   @date    May 28, 2017
+   @mname   DrawBitmapSection
+   @details
+	  Draws only a selected portion of a bitmap.
+	  It is used to change the length of the pallete depending on the game level.\n
+  --------------------------------------------------------------------------
+ */
+static void
+DrawBitmapSection(GameEntity* g, int xs, int ys, int w) {
+	FENTRY();
+	TRACE();
+	al_draw_bitmap_region(g->bmap, xs, ys, w, g->height, g->xposition, g->yposition, 0);
+	FEXIT();
+} // end-of-function DrawBitmapSection
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 4, 2017
+   @mname   DisplayFps
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+void
+DisplayFps(PongData* p) {
+
+	FENTRY();
+	TRACE();
+	char buffer[100];
+	sprintf(buffer, "FPS %3.2f", fpscount);
+	DrawText(p, buffer, 100, 10, regularFont_c);
+	FEXIT();
+
+} // end-of-function DisplayFps
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
+   @date    Jun 4, 2017
+   @mname   SaveFrameToFile
+   @details
+	  \n
+  --------------------------------------------------------------------------
+ */
+void
+SaveFrameToFile(PongData* p) {
+
+	static int fnum = 0;
+	static char buffer[100];
+
+	sprintf(buffer,"frame%03d.jpeg", fnum++);
+	al_save_bitmap(buffer, al_get_backbuffer(p->display.display));
+} // end-of-function SaveFrameToFile
+
+
+
+/**
+  ---------------------------------------------------------------------------
+   @author  dwlambiri
    @date    May 22, 2017
    @mname   DrawObjects
    @details
@@ -912,6 +1121,9 @@ DrawObjects(PongData* p) {
 	DrawBitmapSection(&(p->p1.ge));
 	DrawBitmapSection(&(p->p2.ge));
 	DrawBitmap(&(p->ball));
+	DisplayFps(p);
+	//save frame to file
+	//SaveFrameToFile(p);
 	FEXIT();
 } // end-of-function DrawObjects
 
@@ -1360,7 +1572,8 @@ GameLoop(PongData* p) {
 
 	bool roundwin = false;
 	int skipCounter = 0;
-
+	static int framecount = 0;
+	static float gametime = al_current_time();
 
 	PlaySound(p->startsample);
 	//We are waiting for an event from on one of the sources that are linked to the event queue
@@ -1420,6 +1633,14 @@ GameLoop(PongData* p) {
 			//check if we need to update the frame
 			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
 			   p->ev.timer.source == p->timer) {
+				//calc fps
+				framecount++;
+				float tdiff = al_current_time() - gametime;
+				if( tdiff >= 1) {
+					gametime = al_current_time();
+					fpscount = framecount / tdiff;
+					framecount = 0;
+				}
 				//If this is a screen update timer event then we have to redraw the screen
 				//we have to update the ball position and then draw all objects (players and ball)
 				//Calculates next position of the paddles based on the key inputs read above
@@ -1501,6 +1722,7 @@ CreateGameData(int argc, char **argv) {
 	strcpy(p->p1.ge.bitmapFileName, P1FNAME);
 	strcpy(p->p2.ge.bitmapFileName, P2FNAME);
 	strcpy(p->ball.bitmapFileName, BALLFNAME);
+	strcpy(p->animation.bitmapFileName, ANIMATIONFNAME);
 
 	p->bcolor = &(p->bcolorarray[yellow_c]);
 
@@ -1723,6 +1945,11 @@ InitGame() {
 		return false;
 	}
 	if(LoadBitmap(&(p->ball)) == false) {
+		FEXIT();
+		return false;
+	}
+
+	if(LoadBitmap(&(p->animation)) == false) {
 		FEXIT();
 		return false;
 	}
