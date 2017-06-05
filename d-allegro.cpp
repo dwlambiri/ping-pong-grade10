@@ -820,6 +820,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 
 		sprintf(textBuffer, "Total Points Won: %s %d %s %d",p->p2.name, p->p2.totalpoints, p->p1.name, p->p1.totalpoints);
 		next = DrawText(p, textBuffer, p->display.width/2, next, regularFont_c);
+		DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, next + 20, regularFont_c);
 
 		PlaySound(p->winsample);
 		sprintf(textBuffer, "[Mode: %s] [Level: %d] [Score: %s %d %s %d]",(p->arcade?"Arcade":"Human"), p->level, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
@@ -834,11 +835,11 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 		char buffer[100];
 		sprintf(buffer, "First to %d Wins!", p->maxscore);
 		next = DrawText(p, buffer, p->display.width/2, next, regularFont_c);
+		DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, p->display.height/2, regularFont_c);
 		//DEBUG(" =======\n");
 	}
 
 
-	DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, p->display.height/2, regularFont_c);
 	al_flip_display();
 
 	if(PressAnyKeyToBegin(p) == false) {
