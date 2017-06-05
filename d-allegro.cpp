@@ -956,6 +956,7 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 	FENTRY();
 	TRACE();
 	char textBuffer[255];
+
 	if(p->roundWinner->score == p->maxscore) {
 		p->roundWinner->games++;
 		sprintf(textBuffer, "%s Wins The Game!!",p->roundWinner->name);
@@ -975,6 +976,8 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 		SetHalIntelligence(p);
 		p->p2.score = 0;
 		p->p1.score = 0;
+		DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, next + 20, regularFont_c);
+
 	}
 	else {
 		sprintf(textBuffer, "%s Wins The Round!! Score: %s %d %s %d",p->roundWinner->name, p->p2.name, p->p2.score, p->p1.name, p->p1.score);
@@ -983,10 +986,11 @@ DisplayTextAndWaitRoundWin(PongData* p) {
 		sprintf(buffer, "First to %d Wins!", p->maxscore);
 		next = DrawText(p, buffer, p->display.width/2, next, regularFont_c);
 		//DEBUG(" =======\n");
+		DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, p->display.height/2, regularFont_c);
+
 	}
 
 
-	DrawText(p, (char*)"Press a key to begin or ESC to exit", p->display.width/2, p->display.height/2, regularFont_c);
 	al_flip_display();
 
 	if(PressAnyKeyToBegin(p) == false) {
