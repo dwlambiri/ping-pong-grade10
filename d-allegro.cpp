@@ -1249,25 +1249,27 @@ static void
 SetHalIntelligence(PongData* p) {
    FENTRY();
    TRACE();
-   if((p->p1.totalpoints >= p->p2.totalpoints + maxdiff_c) || (p->p2.score == 0)) {
-	   if(halAiLevel == pro_c) {
-		   FEXIT();
-		   return;
-	   }
-	   TRACE();
-	   halCurrentPtr = &(halLevels[++halAiLevel]);
-	   p->p2.paddleSpeed = halCurrentPtr->paddlespeed;
+   if (p->arcade == true){
+		if((p->p1.totalpoints >= p->p2.totalpoints + maxdiff_c) || (p->p2.score == 0)) {
+		   if(halAiLevel == pro_c) {
+			   FEXIT();
+			   return;
+		   }
+		   TRACE();
+		   halCurrentPtr = &(halLevels[++halAiLevel]);
+		   p->p2.paddleSpeed = halCurrentPtr->paddlespeed;
+		}
+		if((p->p1.totalpoints + maxdiff_c <=  p->p2.totalpoints) || (p->p1.score == 0)) {
+		   if(halAiLevel == novice_c) {
+			   FEXIT();
+			   return;
+		   }
+		   TRACE();
+		   halCurrentPtr = &(halLevels[--halAiLevel]);
+		   p->p2.paddleSpeed = halCurrentPtr->paddlespeed;
+		}
+		DEBUG2("HAL skill: ", halAiLevel);
    }
-   if((p->p1.totalpoints + maxdiff_c <=  p->p2.totalpoints) || (p->p1.score == 0)) {
-	   if(halAiLevel == novice_c) {
-		   FEXIT();
-		   return;
-	   }
-	   TRACE();
-	   halCurrentPtr = &(halLevels[--halAiLevel]);
-	   p->p2.paddleSpeed = halCurrentPtr->paddlespeed;
-   }
-   DEBUG2("HAL skill: ", halAiLevel);
    FEXIT();
 } // end-of-function SetHalIntelligence
 
