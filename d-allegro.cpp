@@ -878,6 +878,7 @@ DisplayTextAndWaitBegin(PongData* p) {
 	FENTRY();
 	TRACE();
 	StartTimers(p);
+
 	while(true) {
 		al_wait_for_event(p->eventqueue, &(p->ev));
 		if(p->ev.type == ALLEGRO_EVENT_TIMER &&
@@ -1586,12 +1587,9 @@ GameLoop(PongData* p) {
 	//This function blocks until an event is recieved
 	//Therefore if the timers would not be started, this function would return only on a keyboard or mouse event
 	while (true){
+		TRACE();
 		al_wait_for_event(p->eventqueue, &(p->ev));
 
-		if(p->ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-			FEXIT();
-			return false;
-		}
 		//If the round is won we need to stop the game for 1 second
 		//We do this by counting timer events without processing them which in effect
 		//skips frames
@@ -1618,43 +1616,47 @@ GameLoop(PongData* p) {
 		}
 		else {
 			TRACE();
-
-			//if this is a hal logic event we need to let hal work
-			if(p->arcade == true &&
-			   p->ev.type == ALLEGRO_EVENT_TIMER &&
-			   p->ev.timer.source == p->hal9000) {
-				//if we are in arcade mode and the timer event belongs to the hal timer then
-				// we have to run hal's ai logic.
-				HAL9000AI(p);
-			}
-			else {
-				//check if escape key has been pressed
-				if(ProcessKeyPress(p) == false) {
-					//user has ended game
-					FEXIT();
-					return false;
-				}
-			}
-			//check if we need to update the frame
-			if(p->ev.type == ALLEGRO_EVENT_TIMER &&
-			   p->ev.timer.source == p->timer) {
-				//calc fps
-				framecount++;
-				float tdiff = al_current_time() - gametime;
-				if( tdiff >= 1) {
-					gametime = al_current_time();
-					fpscount = framecount / tdiff;
-					framecount = 0;
-				}
-				//If this is a screen update timer event then we have to redraw the screen
-				//we have to update the ball position and then draw all objects (players and ball)
-				//Calculates next position of the paddles based on the key inputs read above
-				MovePaddles(p);
-				roundwin = UpdateBallPosition(p);
-				DrawObjects(p);
-				//This function shows the content of the display buffer on the screen.
-				al_flip_display();
-			}
+			switch (p->ev.type) {
+				case ALLEGRO_EVENT_DISPLAY_CLOSE:
+				case ALLEGRO_EVENT_KEY_DOWN:
+				case ALLEGRO_EVENT_KEY_UP:
+					if(ProcessKeyPress(p) == false) {
+						//user has ended game
+						FEXIT();
+						return false;
+					}
+					break;
+				case ALLEGRO_EVENT_TIMER:
+					//if this is a hal logic event we need to let hal work
+					if(p->arcade == true &&
+					   p->ev.timer.source == p->hal9000) {
+						//if we are in arcade mode and the timer event belongs to the hal timer then
+						// we have to run hal's ai logic.
+						HAL9000AI(p);
+					}
+					//check if we need to update the frame
+					if(p->ev.timer.source == p->timer) {
+						//calc fps
+						framecount++;
+						float tdiff = al_current_time() - gametime;
+						if( tdiff >= 1) {
+							gametime = al_current_time();
+							fpscount = framecount / tdiff;
+							framecount = 0;
+						}
+						//If this is a screen update timer event then we have to redraw the screen
+						//we have to update the ball position and then draw all objects (players and ball)
+						//Calculates next position of the paddles based on the key inputs read above
+						MovePaddles(p);
+						roundwin = UpdateBallPosition(p);
+						DrawObjects(p);
+						//This function shows the content of the display buffer on the screen.
+						al_flip_display();
+					}
+					break;
+				default:
+					break;
+			} //end-switch(p->ev.type)
 		}
 	}
 
