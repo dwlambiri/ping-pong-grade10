@@ -586,7 +586,7 @@ ProcessKeyPress(PongData* p) {
 			break;
 		case ALLEGRO_KEY_S:
 			if(p->arcade == false ) p->p2.keyPress[1] = true;
-			else p->p2.keyPress[1] = true;
+			else p->p2.keyPress[1] = false;
 			p->p1.keyPress[0] = false;
 			break;
 		case ALLEGRO_KEY_P:
